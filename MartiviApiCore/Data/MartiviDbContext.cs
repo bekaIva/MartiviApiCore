@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using MartiviApi.Models;
+using MartiviApiCore.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace MartiviApi.Data
@@ -13,7 +14,8 @@ namespace MartiviApi.Data
         {
 
         }
-        public DbSet<Menu> Menus { get; set; }
-        public DbSet<Reservation> Reservations { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }

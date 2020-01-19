@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using MartiviApi.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,33 +11,33 @@ namespace MartiviApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class MenusController : ControllerBase
+    public class CategoriesController : ControllerBase
     {
         MartiviDbContext martiviDbContext;
 
-        public MenusController(MartiviDbContext db)
+        public CategoriesController(MartiviDbContext db)
         {
             martiviDbContext = db;
         }
 
         [HttpGet]
-        public IActionResult GetMenus()
+        public IActionResult GetCategories()
         {
-            var menus = martiviDbContext.Menus.Include("SubMenus");
-            return Ok(menus);
+            var categories = martiviDbContext.Categories.Include("Products");
+            return Ok(categories);
         }
         
         [Route("id/{id}")]
         [HttpGet]
-        public IActionResult GetMenu(int id)
+        public IActionResult GetCategories(int id)
         {
-            var menu = martiviDbContext.Menus.Include("SubMenus").FirstOrDefault(m=>m.Id==id);
-            if (menu==null)
+            var categories = martiviDbContext.Categories.Include("Products").FirstOrDefault(c=>c.CategoryId==id);
+            if (categories == null)
             {
                 return NotFound();
             }
 
-            return Ok(menu);
+            return Ok(categories);
         }
     }
 }
