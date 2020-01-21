@@ -1,6 +1,7 @@
 using AutoMapper;
 using MartiviApi.Models.Users;
 using MartiviApiCore.Models;
+using MartiviApiCore.Models.Users;
 
 namespace MartiviApiCore.Helpers
 {

@@ -1,4 +1,5 @@
 ﻿using MartiviApiCore.Models;
+using MartiviSharedLib.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -7,11 +8,9 @@ using System.Web;
 
 namespace MartiviApi.Models
 {
-    public class Order
+    public class Order: OrderBase
     {
-        public int OrderId { get; set; }
         public User User { get; set; }
-        public virtual ICollection<Product> Products { get; set; }
         
     }
 }

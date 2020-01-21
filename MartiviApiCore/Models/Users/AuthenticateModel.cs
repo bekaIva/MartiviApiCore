@@ -1,13 +1,14 @@
+using MartiviSharedLib;
 using System.ComponentModel.DataAnnotations;
 
 namespace MartiviApi.Models.Users
 {
-    public class AuthenticateModel
+    public class AuthenticateModel: AuthenticateModelBase
     {
         [Required]
-        public string Username { get; set; }
+        public override string Username { get; set; }
 
         [Required]
-        public string Password { get; set; }
+        public override string Password { get; set; }
     }
 }

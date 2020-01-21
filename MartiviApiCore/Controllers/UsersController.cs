@@ -11,6 +11,7 @@ using MartiviApi.Models.Users;
 using MartiviApi.Services;
 using MartiviApiCore.Helpers;
 using MartiviApiCore.Models;
+using MartiviApiCore.Models.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,6 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace MartiviApiCore.Controllers
 {
-    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class UsersController : ControllerBase
@@ -66,34 +66,28 @@ namespace MartiviApiCore.Controllers
             // return basic user info and authentication token
             return Ok(new
             {
-                Id = user.UserId,
+                UserId = user.UserId,
                 Username = user.Username,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Token = tokenString
             });
         }
-
         [AllowAnonymous]
         [HttpPost("register")]
         public IActionResult Register([FromBody]RegisterModel model)
         {
-            // map model to entity
             var user = _mapper.Map<User>(model);
-
             try
             {
-                // create user
-                _userService.Create(user, model.Password);
-                return Ok();
+                var u = _userService.Create(user, model.Password);
+                return Ok(u);
             }
             catch (AppException ex)
             {
-                // return error message if there was an exception
                 return BadRequest(new { message = ex.Message });
             }
         }
-
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -107,7 +101,7 @@ namespace MartiviApiCore.Controllers
         {
             var user = _userService.GetById(id);
             var model = _mapper.Map<UserModel>(user);
-            return Ok(model);
+            return Ok(user);
         }
 
         [HttpPut("{id}")]

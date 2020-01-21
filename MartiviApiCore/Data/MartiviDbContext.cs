@@ -4,6 +4,7 @@ using System.Linq;
 using System.Web;
 using MartiviApi.Models;
 using MartiviApiCore.Models;
+using MartiviSharedLib.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace MartiviApi.Data

@@ -1,19 +1,20 @@
+using MartiviSharedLib.Models.Users;
 using System.ComponentModel.DataAnnotations;
 
 namespace MartiviApi.Models.Users
 {
-    public class RegisterModel
+    public class RegisterModel: RegisterModelBase
     {
         [Required]
-        public string FirstName { get; set; }
+        public override string FirstName { get; set; }
 
         [Required]
-        public string LastName { get; set; }
+        public override string LastName { get; set; }
 
         [Required]
-        public string Username { get; set; }
+        public override string Username { get; set; }
 
         [Required]
-        public string Password { get; set; }
+        public override string Password { get; set; }
     }
 }

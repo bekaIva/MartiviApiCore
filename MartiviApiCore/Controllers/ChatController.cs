@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using MartiviApi.Data;
 using MartiviApiCore.Models;
+using MartiviSharedLib;
+using MartiviSharedLib.Models.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
