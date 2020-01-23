@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using MartiviApi.Data;
 using MartiviApi.Models;
-using MartiviSharedLib.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,9 +11,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MartiviApiCore.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductsController : ControllerBase
     {
         MartiviDbContext martiviDbContext;

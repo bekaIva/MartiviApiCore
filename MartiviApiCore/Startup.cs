@@ -40,7 +40,8 @@ namespace MartiviApiCore
             var appSettingsSection = Configuration.GetSection("AppSettings");
             services.AddDbContextPool<MartiviDbContext>(options => 
             {
-                options.UseSqlServer(Configuration.GetConnectionString("MartiviApiServerDb"));
+                options.UseSqlServer(Configuration.GetConnectionString("MartiviApiServerDb")).EnableSensitiveDataLogging(true);
+                
             });
             var appSettings = appSettingsSection.Get<AppSettings>();
             var key = Encoding.ASCII.GetBytes(appSettings.Secret);

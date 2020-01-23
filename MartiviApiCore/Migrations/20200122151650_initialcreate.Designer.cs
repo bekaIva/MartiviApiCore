@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MartiviApiCore.Migrations
 {
     [DbContext(typeof(MartiviDbContext))]
-    [Migration("20200116140042_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20200122151650_initialcreate")]
+    partial class initialcreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -46,6 +46,9 @@ namespace MartiviApiCore.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.Property<int?>("UserId")
                         .HasColumnType("int");
 
@@ -56,9 +59,9 @@ namespace MartiviApiCore.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("MartiviApi.Models.Product", b =>
+            modelBuilder.Entity("MartiviApi.Models.OrderedProduct", b =>
                 {
-                    b.Property<int>("ProductId")
+                    b.Property<int>("OrderedProductId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
@@ -81,6 +84,44 @@ namespace MartiviApiCore.Migrations
                     b.Property<double>("Price")
                         .HasColumnType("float");
 
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Weight")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("OrderedProductId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderedProduct");
+                });
+
+            modelBuilder.Entity("MartiviApi.Models.Product", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("Price")
+                        .HasColumnType("float");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
@@ -91,12 +132,49 @@ namespace MartiviApiCore.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("OrderId");
-
                     b.ToTable("Product");
                 });
 
-            modelBuilder.Entity("MartiviApiCore.Models.ChatMessage", b =>
+            modelBuilder.Entity("MartiviApi.Models.User", b =>
+                {
+                    b.Property<int>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("PasswordHash")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<byte[]>("PasswordSalt")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Token")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("MartiviApi.Models.Users.ChatMessage", b =>
                 {
                     b.Property<int>("ChatMessageId")
                         .ValueGeneratedOnAdd()
@@ -119,38 +197,18 @@ namespace MartiviApiCore.Migrations
                     b.ToTable("ChatMessage");
                 });
 
-            modelBuilder.Entity("MartiviApiCore.Models.User", b =>
-                {
-                    b.Property<int>("UserId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("FirstName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("PasswordHash")
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<byte[]>("PasswordSalt")
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("Username")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("Users");
-                });
-
             modelBuilder.Entity("MartiviApi.Models.Order", b =>
                 {
-                    b.HasOne("MartiviApiCore.Models.User", "User")
+                    b.HasOne("MartiviApi.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
+                });
+
+            modelBuilder.Entity("MartiviApi.Models.OrderedProduct", b =>
+                {
+                    b.HasOne("MartiviApi.Models.Order", null)
+                        .WithMany("OrderedProducts")
+                        .HasForeignKey("OrderId");
                 });
 
             modelBuilder.Entity("MartiviApi.Models.Product", b =>
@@ -160,15 +218,11 @@ namespace MartiviApiCore.Migrations
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("MartiviApi.Models.Order", null)
-                        .WithMany("Products")
-                        .HasForeignKey("OrderId");
                 });
 
-            modelBuilder.Entity("MartiviApiCore.Models.ChatMessage", b =>
+            modelBuilder.Entity("MartiviApi.Models.Users.ChatMessage", b =>
                 {
-                    b.HasOne("MartiviApiCore.Models.User", null)
+                    b.HasOne("MartiviApi.Models.User", null)
                         .WithMany("Messages")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

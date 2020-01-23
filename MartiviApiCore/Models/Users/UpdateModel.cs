@@ -1,12 +1,16 @@
-﻿using MartiviSharedLib.Models.Users;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MartiviApiCore.Models.Users
+namespace MartiviApi.Models.Users
 {
-    public class UpdateModel: UpdateModelBase
+    public class UpdateModel
     {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
     }
 }

@@ -10,8 +10,7 @@ using MartiviApi.Data;
 using MartiviApi.Models.Users;
 using MartiviApi.Services;
 using MartiviApiCore.Helpers;
-using MartiviApiCore.Models;
-using MartiviApiCore.Models.Users;
+using MartiviApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -47,7 +46,7 @@ namespace MartiviApiCore.Controllers
             var user = _userService.Authenticate(model.Username, model.Password);
 
             if (user == null)
-                return BadRequest(new { message = "Username or password is incorrect" });
+                return BadRequest(new { message = "მომხმარებლის სახელი ან პაროლი არასწორია" });
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
@@ -62,8 +61,6 @@ namespace MartiviApiCore.Controllers
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
-
-            // return basic user info and authentication token
             return Ok(new
             {
                 UserId = user.UserId,
@@ -89,6 +86,7 @@ namespace MartiviApiCore.Controllers
             }
         }
         [HttpGet]
+        [Authorize]
         public IActionResult GetAll()
         {
             var users = _userService.GetAll();
@@ -97,6 +95,7 @@ namespace MartiviApiCore.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize]
         public IActionResult GetById(int id)
         {
             var user = _userService.GetById(id);
@@ -105,6 +104,7 @@ namespace MartiviApiCore.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public IActionResult Update(int id, [FromBody]UpdateModel model)
         {
             // map model to entity and set id
@@ -125,6 +125,7 @@ namespace MartiviApiCore.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public IActionResult Delete(int id)
         {
             _userService.Delete(id);

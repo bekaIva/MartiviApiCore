@@ -1,9 +1,12 @@
-using MartiviSharedLib.Models.Users;
 
 namespace MartiviApi.Models.Users
 {
-  public class UserModel: UserModelBase
+  public class UserModel
     {
-       
+        public int UserId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Username { get; set; }
+        public string UserAddress { get; set; }
     }
 }

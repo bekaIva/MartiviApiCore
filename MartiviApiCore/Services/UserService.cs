@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MartiviApi.Data;
 using MartiviApiCore.Helpers;
-using MartiviApiCore.Models;
+using MartiviApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -55,7 +55,8 @@ namespace MartiviApi.Services
 
         public User GetById(int id)
         {
-            return _context.Users.Include("Messages").FirstOrDefault(user => user.UserId == id);
+            return _context.Users.FirstOrDefault(user => user.UserId == id);
+            //return _context.Users.Include("Messages").FirstOrDefault(user => user.UserId == id);
         }
 
         public User Create(User user, string password)
