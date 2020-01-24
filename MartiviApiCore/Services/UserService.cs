@@ -34,7 +34,7 @@ namespace MartiviApi.Services
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 return null;
 
-            var user = _context.Users.SingleOrDefault(x => x.Username == username);
+            var user = _context.Users.FirstOrDefault(x => x.Username == username);
 
             // check if username exists
             if (user == null)

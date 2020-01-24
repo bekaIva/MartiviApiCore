@@ -18,6 +18,7 @@ using MartiviApiCore.Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using MartiviApi.Services;
 using Microsoft.IdentityModel.Tokens;
+using MartiviApiCore.Chathub;
 
 namespace MartiviApiCore
 {
@@ -34,6 +35,7 @@ namespace MartiviApiCore
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
+            services.AddSignalR();
             services.AddControllers();
             services.AddControllers().AddNewtonsoftJson();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -86,22 +88,30 @@ namespace MartiviApiCore
             {
                 app.UseDeveloperExceptionPage();
             }
+           
 
             app.UseHttpsRedirection();
 
-            app.UseRouting();
-
+            
+         
 
             app.UseCors(x => x
               .AllowAnyOrigin()
               .AllowAnyMethod()
               .AllowAnyHeader());
 
-            app.UseAuthentication();
+           
+            app.UseRouting();
+             app.UseAuthentication();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
-            {
+            {                
                 endpoints.MapControllers();
+            });
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<ChatHub>("/chathub");
             });
         }
     }

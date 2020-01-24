@@ -7,9 +7,15 @@ using System.Threading.Tasks;
 
 namespace MartiviApi.Models
 {
+    public enum UserType
+    {
+        Admin,
+        Client
+    }
     public class User
     {
         public int UserId { get; set; }
+        public UserType Type { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Username { get; set; }
