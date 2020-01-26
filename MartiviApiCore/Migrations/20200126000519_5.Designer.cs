@@ -4,14 +4,16 @@ using MartiviApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MartiviApiCore.Migrations
 {
     [DbContext(typeof(MartiviDbContext))]
-    partial class MartiviDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200126000519_5")]
+    partial class _5
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -192,9 +194,6 @@ namespace MartiviApiCore.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Target")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TargetUser")
                         .HasColumnType("int");
 
                     b.Property<int>("TemplateType")

@@ -24,6 +24,7 @@ namespace MartiviApiCore.Controllers
         [HttpPost]
         public IActionResult Post(ChatMessage message)
         {
+            
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -35,7 +36,7 @@ namespace MartiviApiCore.Controllers
             martiviDbContext.Database.OpenConnection();
             try
             {
-
+                
                 martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] ON");
                 martiviDbContext.SaveChanges();
 
@@ -50,10 +51,12 @@ namespace MartiviApiCore.Controllers
 
         }
 
-        [Route("User/{id}")]
+        [Route("GetChat")]
         [HttpGet]
-        public IActionResult GetChat(int id)
+        public IActionResult GetChat()
         {
+            int id;
+            if (!int.TryParse(User.Identity.Name, out id)) return BadRequest();
             var user = martiviDbContext.Users.Include("Messages").FirstOrDefault(u => u.UserId == id);
             if (user == null)
             {
