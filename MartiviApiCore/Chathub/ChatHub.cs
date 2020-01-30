@@ -34,16 +34,19 @@ namespace MartiviApiCore.Chathub
         }
         public async Task SendMessage(ChatMessage chatMessage)
         {
-            var chmSerialized = JsonConvert.SerializeObject(chatMessage);
+            
             using (var scope = _sp.CreateScope())
             {
                 var martiviDbContext = scope.ServiceProvider.GetRequiredService<MartiviDbContext>();
+
                 //...
 
                 int id;
                 int.TryParse(Context.User.Identity.Name, out id);
                 if (id > 0 != true) return;
                 var senderUser = martiviDbContext.Users.Include("Messages").Single(c => c.UserId == id);
+                chatMessage.OwnerProfileImage = senderUser.ProfileImageUrl;
+                var chmSerialized = JsonConvert.SerializeObject(chatMessage);
                 senderUser.Messages.Add(chatMessage);
                 switch (chatMessage.Target)
                 {

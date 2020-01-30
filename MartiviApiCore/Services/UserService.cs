@@ -73,7 +73,7 @@ namespace MartiviApi.Services
 
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
-
+            
             _context.Users.Add(user);
             _context.SaveChanges();
 

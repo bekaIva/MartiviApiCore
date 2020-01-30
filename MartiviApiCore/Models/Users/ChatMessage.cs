@@ -40,5 +40,7 @@ namespace MartiviApi.Models.Users
         public string DateTime { get; set; }
 
         public string Username { get; set; }
+
+        public string OwnerProfileImage { get; set; }
     }
 }
