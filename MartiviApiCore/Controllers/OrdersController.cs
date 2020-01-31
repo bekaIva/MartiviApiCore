@@ -51,6 +51,28 @@ namespace MartiviApi.Controllers
 
 
         }
+
+        [HttpPost]
+        [Route("CancelOrder/")]
+        public IActionResult PostCancelOrder(Order order)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            order = martiviDbContext.Orders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == order.OrderId);
+
+            order.Status = OrderStatus.Canceled;
+
+           
+            martiviDbContext.SaveChanges();
+
+
+            return StatusCode(StatusCodes.Status201Created);
+
+
+        }
+
         [HttpPost]
         public IActionResult Post(Order order)
         {

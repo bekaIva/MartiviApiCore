@@ -87,6 +87,22 @@ namespace MartiviApiCore.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+        [AllowAnonymous]
+        [HttpPost("registerAdmin")]
+        public IActionResult RegisterAdmin([FromBody]RegisterModel model)
+        {
+            var user = _mapper.Map<User>(model);
+            user.Type = UserType.Admin;
+            try
+            {
+                var u = _userService.Create(user, model.Password);
+                return Ok(u);
+            }
+            catch (AppException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
         [HttpGet]
         [Authorize]
         public IActionResult GetAll()
@@ -105,12 +121,16 @@ namespace MartiviApiCore.Controllers
             return Ok(user);
         }
 
-        [HttpPut("{id}")]
+        [HttpPost("Update")]
         [Authorize]
-        public IActionResult Update(int id, [FromBody]UpdateModel model)
+        public IActionResult Update([FromBody]UpdateModel model)
         {
             // map model to entity and set id
-            var user = _mapper.Map<User>(model);
+
+            int id;
+            if (!int.TryParse(User.Identity.Name, out id)) return BadRequest();
+
+                var user = _mapper.Map<User>(model);
             user.UserId = id;
 
             try

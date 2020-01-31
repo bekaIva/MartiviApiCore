@@ -104,6 +104,9 @@ namespace MartiviApi.Services
             if (!string.IsNullOrWhiteSpace(userParam.LastName))
                 user.LastName = userParam.LastName;
 
+            if (!string.IsNullOrWhiteSpace(userParam.ProfileImageUrl))
+                user.ProfileImageUrl = userParam.ProfileImageUrl;
+
             // update password if provided
             if (!string.IsNullOrWhiteSpace(password))
             {

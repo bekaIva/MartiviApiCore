@@ -11,6 +11,7 @@ namespace MartiviApi.Models
     public enum OrderStatus
     {
         Accepted,
+        Canceled,
         Completed
     }
     public class Order
