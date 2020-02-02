@@ -25,6 +25,11 @@ namespace MartiviApiCore.Controllers
         [HttpPost]
         public IActionResult Post(int AddProductToCategoryId, Product product)
         {
+            int userid;
+            if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest();
+            var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
+            if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -56,6 +61,11 @@ namespace MartiviApiCore.Controllers
         [HttpPost]
         public IActionResult Post(Category category)
         {
+            int userid;
+            if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest();
+            var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
+            if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
