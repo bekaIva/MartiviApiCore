@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using MartiviApi.Data;
 using MartiviApi.Models;
+using MartiviApiCore.Chathub;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace MartiviApiCore.Controllers
@@ -14,11 +16,13 @@ namespace MartiviApiCore.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class ProductsController : ControllerBase
+        public class ProductsController : ControllerBase
     {
+        IHubContext<ChatHub> hubContext;
         MartiviDbContext martiviDbContext;
-        public ProductsController(MartiviDbContext db)
+        public ProductsController(MartiviDbContext db, IHubContext<ChatHub> hub)
         {
+            hubContext = hub;
             martiviDbContext = db;
         }
         [Route("{AddProductToCategoryId}")]
@@ -34,6 +38,28 @@ namespace MartiviApiCore.Controllers
             {
                 return BadRequest(ModelState);
             }
+            if(product.ProductId>0)
+            {
+               var existedProduct = martiviDbContext.Products.FirstOrDefault(p => p.ProductId == product.ProductId);
+                if(existedProduct!=null)
+                {
+                    existedProduct.Description = product.Description;
+                    existedProduct.Image = product.Image;
+                    existedProduct.Name = product.Name;
+                    existedProduct.Price = product.Price;
+                    existedProduct.QuantityInSupply = product.QuantityInSupply;
+                    existedProduct.Weight = product.Weight;
+
+                    martiviDbContext.SaveChanges();
+                    hubContext.Clients.All.SendAsync("UpdateListing");
+                    return StatusCode(StatusCodes.Status201Created);
+                }
+                else
+                {
+                    return BadRequest("პროდუქტი არ მოიძებნა");
+                }
+            }
+
             var res = martiviDbContext.Categories.Include("Products").Single(c => c.CategoryId == AddProductToCategoryId);
             product.CategoryId = AddProductToCategoryId;
             //product.CategoryId = res.CategoryId;
@@ -45,7 +71,7 @@ namespace MartiviApiCore.Controllers
 
                 martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Categories] ON");
                 martiviDbContext.SaveChanges();
-               
+                hubContext.Clients.All.SendAsync("UpdateListing");
                 return StatusCode(StatusCodes.Status201Created);
             }
             finally
@@ -70,6 +96,26 @@ namespace MartiviApiCore.Controllers
             {
                 return BadRequest(ModelState);
             }
+           
+            if(category.CategoryId>0)
+            {
+                try
+                {
+                   var currentCat = martiviDbContext.Categories.FirstOrDefault(cat =>   cat.CategoryId == category.CategoryId);
+                    if(currentCat!=null)
+                    {
+                        currentCat.Name = category.Name;
+                        currentCat.Image = category.Image;
+                        martiviDbContext.SaveChanges();
+                        hubContext.Clients.All.SendAsync("UpdateListing");
+                        return StatusCode(StatusCodes.Status201Created);
+                    }
+                }
+                catch
+                {
+
+                }
+            }
             int maxid;
             if (martiviDbContext.Categories.Count() == 0) maxid = 0;
             else maxid = martiviDbContext.Categories.Max(c => c.CategoryId);
@@ -80,7 +126,7 @@ namespace MartiviApiCore.Controllers
             {
                 martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Categories] ON");
                 martiviDbContext.SaveChanges();
-               
+                hubContext.Clients.All.SendAsync("UpdateListing");
                 return StatusCode(StatusCodes.Status201Created);
             }
             finally
@@ -91,6 +137,24 @@ namespace MartiviApiCore.Controllers
           
            
             
+        }
+
+        [HttpGet]
+        [Route("Delete/{id}")]
+        public IActionResult DeleteProduct(int id)
+        {
+           var p = martiviDbContext.Products.FirstOrDefault(p => p.ProductId == id);
+            if(p!=null)
+            {
+                martiviDbContext.Products.Remove(p);
+                martiviDbContext.SaveChanges();
+                hubContext.Clients.All.SendAsync("UpdateListing");
+                return StatusCode(StatusCodes.Status200OK);
+            }
+            else
+            {
+                return BadRequest("პროდუქტი არ მოიძებნა");
+            }
         }
     }
 

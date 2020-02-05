@@ -4,49 +4,22 @@ using MartiviApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MartiviApiCore.Migrations
 {
     [DbContext(typeof(MartiviDbContext))]
-    partial class MartiviDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200202175253_17")]
+    partial class _17
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "3.1.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-            modelBuilder.Entity("MartiviApi.Models.CanceledOrder", b =>
-                {
-                    b.Property<int>("CanceledOrderId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<long>("OrderTimeTicks")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Payment")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("CanceledOrderId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CanceledOrders");
-                });
 
             modelBuilder.Entity("MartiviApi.Models.Category", b =>
                 {
@@ -66,41 +39,16 @@ namespace MartiviApiCore.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("MartiviApi.Models.CompletedOrder", b =>
-                {
-                    b.Property<int>("CompletedOrderId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<long>("OrderTimeTicks")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Payment")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("CompletedOrderId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CompletedOrders");
-                });
-
             modelBuilder.Entity("MartiviApi.Models.Order", b =>
                 {
                     b.Property<int>("OrderId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("OrderTimeTicks")
                         .HasColumnType("bigint");
@@ -119,6 +67,8 @@ namespace MartiviApiCore.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Orders");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("Order");
                 });
 
             modelBuilder.Entity("MartiviApi.Models.OrderedProduct", b =>
@@ -128,13 +78,7 @@ namespace MartiviApiCore.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("CanceledOrderId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CompletedOrderId")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -162,10 +106,6 @@ namespace MartiviApiCore.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("OrderedProductId");
-
-                    b.HasIndex("CanceledOrderId");
-
-                    b.HasIndex("CompletedOrderId");
 
                     b.HasIndex("OrderId");
 
@@ -292,16 +232,12 @@ namespace MartiviApiCore.Migrations
 
             modelBuilder.Entity("MartiviApi.Models.CanceledOrder", b =>
                 {
-                    b.HasOne("MartiviApi.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-                });
+                    b.HasBaseType("MartiviApi.Models.Order");
 
-            modelBuilder.Entity("MartiviApi.Models.CompletedOrder", b =>
-                {
-                    b.HasOne("MartiviApi.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
+                    b.Property<int>("CanceledOrderId")
+                        .HasColumnType("int");
+
+                    b.HasDiscriminator().HasValue("CanceledOrder");
                 });
 
             modelBuilder.Entity("MartiviApi.Models.Order", b =>
@@ -313,14 +249,6 @@ namespace MartiviApiCore.Migrations
 
             modelBuilder.Entity("MartiviApi.Models.OrderedProduct", b =>
                 {
-                    b.HasOne("MartiviApi.Models.CanceledOrder", null)
-                        .WithMany("OrderedProducts")
-                        .HasForeignKey("CanceledOrderId");
-
-                    b.HasOne("MartiviApi.Models.CompletedOrder", null)
-                        .WithMany("OrderedProducts")
-                        .HasForeignKey("CompletedOrderId");
-
                     b.HasOne("MartiviApi.Models.Order", null)
                         .WithMany("OrderedProducts")
                         .HasForeignKey("OrderId");

@@ -44,7 +44,9 @@ namespace MartiviApiCore.Controllers
         public IActionResult Authenticate([FromBody]AuthenticateModel model)
         {
             var user = _userService.Authenticate(model.Username, model.Password);
-
+            if (user == null) return BadRequest("მომხმარებელი ამ სახელით არ მოიძებნა");
+            if (model.IsAdmin && user.Type != UserType.Admin) return BadRequest("გთხოვთ გაიაროთ ავტორიზაცია ადმინისტრატორის მომხმარებლით.");
+            if (!model.IsAdmin && user.Type != UserType.Client) return BadRequest("გთხოვთ გაიაროთ ავტორიზაცია კლიენტის მომხმარებლით.");
             if (user == null)
                 return BadRequest(new { message = "მომხმარებლის სახელი ან პაროლი არასწორია" });
 
@@ -103,21 +105,31 @@ namespace MartiviApiCore.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+        
         [HttpGet]
         [Authorize]
+        [HttpGet("GetAll")]
         public IActionResult GetAll()
         {
+            int id;
+            if (!int.TryParse(User.Identity.Name, out id)) return BadRequest();
+            var senderuser = _userService.GetById(id);
+            if (senderuser == null) return BadRequest();
+            if(senderuser.Type!=UserType.Admin)
+            {
+                return BadRequest("You dont have access to get data.");
+            }
+
             var users = _userService.GetAll();
-            var model = _mapper.Map<IList<UserModel>>(users);
-            return Ok(model);
+            return Ok(users);
         }
 
         [HttpGet("{id}")]
         [Authorize]
         public IActionResult GetById(int id)
         {
+            
             var user = _userService.GetById(id);
-            var model = _mapper.Map<User>(user);
             return Ok(user);
         }
 

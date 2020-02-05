@@ -4,14 +4,16 @@ using MartiviApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MartiviApiCore.Migrations
 {
     [DbContext(typeof(MartiviDbContext))]
-    partial class MartiviDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200202175650_18")]
+    partial class _18
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,35 +68,6 @@ namespace MartiviApiCore.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("MartiviApi.Models.CompletedOrder", b =>
-                {
-                    b.Property<int>("CompletedOrderId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<long>("OrderTimeTicks")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Payment")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("CompletedOrderId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CompletedOrders");
-                });
-
             modelBuilder.Entity("MartiviApi.Models.Order", b =>
                 {
                     b.Property<int>("OrderId")
@@ -134,9 +107,6 @@ namespace MartiviApiCore.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("CompletedOrderId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -164,8 +134,6 @@ namespace MartiviApiCore.Migrations
                     b.HasKey("OrderedProductId");
 
                     b.HasIndex("CanceledOrderId");
-
-                    b.HasIndex("CompletedOrderId");
 
                     b.HasIndex("OrderId");
 
@@ -297,13 +265,6 @@ namespace MartiviApiCore.Migrations
                         .HasForeignKey("UserId");
                 });
 
-            modelBuilder.Entity("MartiviApi.Models.CompletedOrder", b =>
-                {
-                    b.HasOne("MartiviApi.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-                });
-
             modelBuilder.Entity("MartiviApi.Models.Order", b =>
                 {
                     b.HasOne("MartiviApi.Models.User", "User")
@@ -316,10 +277,6 @@ namespace MartiviApiCore.Migrations
                     b.HasOne("MartiviApi.Models.CanceledOrder", null)
                         .WithMany("OrderedProducts")
                         .HasForeignKey("CanceledOrderId");
-
-                    b.HasOne("MartiviApi.Models.CompletedOrder", null)
-                        .WithMany("OrderedProducts")
-                        .HasForeignKey("CompletedOrderId");
 
                     b.HasOne("MartiviApi.Models.Order", null)
                         .WithMany("OrderedProducts")
