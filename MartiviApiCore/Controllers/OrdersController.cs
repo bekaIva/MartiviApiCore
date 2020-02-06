@@ -95,12 +95,12 @@ namespace MartiviApi.Controllers
             var admins = martiviDbContext.Users.Where(user => user.Type == UserType.Admin);
             foreach (var admin in admins)
             {
-                hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrderListing");
+                hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
             }
 
             hubContext.Clients.All.SendAsync("UpdateListing");
-            hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrderListing");
-            hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing"); ;
+            hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
+            hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrder", exsistingOrder);
             return StatusCode(StatusCodes.Status201Created);
 
 
@@ -135,8 +135,8 @@ namespace MartiviApi.Controllers
 
             martiviDbContext.SaveChanges();
             hubContext.Clients.All.SendAsync("UpdateListing");
-            hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrderListing");
-            hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing");
+            hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
+            hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrder", exsistingOrder);
 
             return StatusCode(StatusCodes.Status201Created);
         }
@@ -208,8 +208,8 @@ namespace MartiviApi.Controllers
 
             //martiviDbContext.SaveChanges();
             hubContext.Clients.All.SendAsync("UpdateListing");
-            hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrderListing");
-            hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing");
+            hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
+            hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrder", exsistingOrder);
 
             return StatusCode(StatusCodes.Status201Created);
         }
@@ -255,7 +255,7 @@ namespace MartiviApi.Controllers
         [HttpPost]
         public IActionResult GetOrders(User user)
         {
-            var orders = martiviDbContext.Orders.Include("OrderedProducts").Where(o => o.User.UserId == user.UserId);
+            var orders = martiviDbContext.Orders.Include("OrderedProducts").Include("User").Where(o => o.User.UserId == user.UserId);
             if (orders == null)
             {
                 return NotFound();
