@@ -18,6 +18,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.SignalR;
+using MartiviApiCore.Chathub;
 
 namespace MartiviApiCore.Controllers
 {
@@ -28,12 +30,15 @@ namespace MartiviApiCore.Controllers
         private IUserService _userService;
         private IMapper _mapper;
         private readonly AppSettings _appSettings;
-
-        public UsersController(
+        IHubContext<ChatHub> _hub;
+        MartiviDbContext martiviDbContext;
+        public UsersController(MartiviDbContext db,
             IUserService userService,
             IMapper mapper,
-            IConfiguration config)
+            IConfiguration config, IHubContext<ChatHub> hub)
         {
+            martiviDbContext = db;
+            _hub = hub;
             _userService = userService;
             _mapper = mapper;
             _appSettings = config.GetSection("AppSettings").Get<AppSettings>();
@@ -82,6 +87,13 @@ namespace MartiviApiCore.Controllers
             try
             {
                 var u = _userService.Create(user, model.Password);
+
+                var admins = martiviDbContext.Users.Where(user => user.Type == UserType.Admin);
+                foreach (var admin in admins)
+                {
+                    _hub.Clients.User(admin.UserId.ToString()).SendAsync("UpdateUsers");
+                }
+
                 return Ok(u);
             }
             catch (AppException ex)

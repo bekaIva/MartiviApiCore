@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MartiviApi.Data;
 using MartiviApi.Models;
@@ -16,7 +17,7 @@ namespace MartiviApiCore.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-        public class ProductsController : ControllerBase
+    public class ProductsController : ControllerBase
     {
         IHubContext<ChatHub> hubContext;
         MartiviDbContext martiviDbContext;
@@ -38,10 +39,10 @@ namespace MartiviApiCore.Controllers
             {
                 return BadRequest(ModelState);
             }
-            if(product.ProductId>0)
+            if (product.ProductId > 0)
             {
-               var existedProduct = martiviDbContext.Products.FirstOrDefault(p => p.ProductId == product.ProductId);
-                if(existedProduct!=null)
+                var existedProduct = martiviDbContext.Products.FirstOrDefault(p => p.ProductId == product.ProductId);
+                if (existedProduct != null)
                 {
                     existedProduct.Description = product.Description;
                     existedProduct.Image = product.Image;
@@ -80,10 +81,10 @@ namespace MartiviApiCore.Controllers
                 martiviDbContext.Database.CloseConnection();
             }
 
-            
+
         }
 
-        
+
         [HttpPost]
         public IActionResult Post(Category category)
         {
@@ -96,13 +97,13 @@ namespace MartiviApiCore.Controllers
             {
                 return BadRequest(ModelState);
             }
-           
-            if(category.CategoryId>0)
+
+            if (category.CategoryId > 0)
             {
                 try
                 {
-                   var currentCat = martiviDbContext.Categories.FirstOrDefault(cat =>   cat.CategoryId == category.CategoryId);
-                    if(currentCat!=null)
+                    var currentCat = martiviDbContext.Categories.FirstOrDefault(cat => cat.CategoryId == category.CategoryId);
+                    if (currentCat != null)
                     {
                         currentCat.Name = category.Name;
                         currentCat.Image = category.Image;
@@ -134,18 +135,32 @@ namespace MartiviApiCore.Controllers
                 martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Categories] OFF");
                 martiviDbContext.Database.CloseConnection();
             }
-          
-           
-            
+
+
+
         }
 
+
+        //http://martivi.net/api/upload/Images/file110e635d-d1b7-4d02-abd1-241c90a9b945
         [HttpGet]
         [Route("Delete/{id}")]
         public IActionResult DeleteProduct(int id)
         {
-           var p = martiviDbContext.Products.FirstOrDefault(p => p.ProductId == id);
-            if(p!=null)
+            var p = martiviDbContext.Products.FirstOrDefault(p => p.ProductId == id);
+            if (p != null)
             {
+                try
+                {
+                    var match = Regex.Match(p.Image, "Images/(?<image>.*?.image)");
+                    if (match.Groups["image"]?.Success ?? false)
+                    {
+                        System.IO.File.Delete("Images/"+match.Groups["image"].Value);
+                    }
+                }
+                catch
+                {
+
+                }
                 martiviDbContext.Products.Remove(p);
                 martiviDbContext.SaveChanges();
                 hubContext.Clients.All.SendAsync("UpdateListing");

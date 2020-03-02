@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace MartiviApiCore.Migrations
 {
-    public partial class initialcreate : Migration
+    public partial class _1 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -27,13 +27,13 @@ namespace MartiviApiCore.Migrations
                 {
                     UserId = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    ProfileImageUrl = table.Column<string>(nullable: true),
+                    Type = table.Column<int>(nullable: false),
                     FirstName = table.Column<string>(nullable: true),
                     LastName = table.Column<string>(nullable: true),
                     Username = table.Column<string>(nullable: true),
-                    Password = table.Column<string>(nullable: true),
                     Phone = table.Column<string>(nullable: true),
                     UserAddress = table.Column<string>(nullable: true),
-                    Token = table.Column<string>(nullable: true),
                     PasswordHash = table.Column<byte[]>(nullable: true),
                     PasswordSalt = table.Column<byte[]>(nullable: true)
                 },
@@ -43,7 +43,7 @@ namespace MartiviApiCore.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Product",
+                name: "Products",
                 columns: table => new
                 {
                     ProductId = table.Column<int>(nullable: false)
@@ -54,17 +54,41 @@ namespace MartiviApiCore.Migrations
                     Image = table.Column<string>(nullable: true),
                     Weight = table.Column<string>(nullable: true),
                     Price = table.Column<double>(nullable: false),
+                    QuantityInSupply = table.Column<int>(nullable: false),
                     Quantity = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Product", x => x.ProductId);
+                    table.PrimaryKey("PK_Products", x => x.ProductId);
                     table.ForeignKey(
-                        name: "FK_Product_Categories_CategoryId",
+                        name: "FK_Products_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
                         principalColumn: "CategoryId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CanceledOrders",
+                columns: table => new
+                {
+                    CanceledOrderId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OrderId = table.Column<int>(nullable: false),
+                    Status = table.Column<int>(nullable: false),
+                    Payment = table.Column<int>(nullable: false),
+                    UserId = table.Column<int>(nullable: true),
+                    OrderTimeTicks = table.Column<long>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CanceledOrders", x => x.CanceledOrderId);
+                    table.ForeignKey(
+                        name: "FK_CanceledOrders_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -73,9 +97,15 @@ namespace MartiviApiCore.Migrations
                 {
                     ChatMessageId = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TemplateType = table.Column<int>(nullable: false),
+                    Target = table.Column<int>(nullable: false),
                     UserId = table.Column<int>(nullable: false),
-                    Message = table.Column<string>(nullable: true),
-                    Side = table.Column<int>(nullable: false)
+                    TargetUser = table.Column<int>(nullable: false),
+                    Text = table.Column<string>(nullable: true),
+                    ProfileImage = table.Column<string>(nullable: true),
+                    DateTime = table.Column<string>(nullable: true),
+                    Username = table.Column<string>(nullable: true),
+                    OwnerProfileImage = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -89,13 +119,38 @@ namespace MartiviApiCore.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CompletedOrders",
+                columns: table => new
+                {
+                    CompletedOrderId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OrderId = table.Column<int>(nullable: false),
+                    Status = table.Column<int>(nullable: false),
+                    Payment = table.Column<int>(nullable: false),
+                    UserId = table.Column<int>(nullable: true),
+                    OrderTimeTicks = table.Column<long>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CompletedOrders", x => x.CompletedOrderId);
+                    table.ForeignKey(
+                        name: "FK_CompletedOrders_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Orders",
                 columns: table => new
                 {
                     OrderId = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Status = table.Column<int>(nullable: false),
-                    UserId = table.Column<int>(nullable: true)
+                    Payment = table.Column<int>(nullable: false),
+                    UserId = table.Column<int>(nullable: true),
+                    OrderTimeTicks = table.Column<long>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -109,7 +164,7 @@ namespace MartiviApiCore.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "OrderedProduct",
+                name: "OrderedProducts",
                 columns: table => new
                 {
                     OrderedProductId = table.Column<int>(nullable: false)
@@ -122,13 +177,27 @@ namespace MartiviApiCore.Migrations
                     Weight = table.Column<string>(nullable: true),
                     Price = table.Column<double>(nullable: false),
                     Quantity = table.Column<int>(nullable: false),
+                    CanceledOrderId = table.Column<int>(nullable: true),
+                    CompletedOrderId = table.Column<int>(nullable: true),
                     OrderId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OrderedProduct", x => x.OrderedProductId);
+                    table.PrimaryKey("PK_OrderedProducts", x => x.OrderedProductId);
                     table.ForeignKey(
-                        name: "FK_OrderedProduct_Orders_OrderId",
+                        name: "FK_OrderedProducts_CanceledOrders_CanceledOrderId",
+                        column: x => x.CanceledOrderId,
+                        principalTable: "CanceledOrders",
+                        principalColumn: "CanceledOrderId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_OrderedProducts_CompletedOrders_CompletedOrderId",
+                        column: x => x.CompletedOrderId,
+                        principalTable: "CompletedOrders",
+                        principalColumn: "CompletedOrderId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_OrderedProducts_Orders_OrderId",
                         column: x => x.OrderId,
                         principalTable: "Orders",
                         principalColumn: "OrderId",
@@ -136,13 +205,33 @@ namespace MartiviApiCore.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_CanceledOrders_UserId",
+                table: "CanceledOrders",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ChatMessage_UserId",
                 table: "ChatMessage",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OrderedProduct_OrderId",
-                table: "OrderedProduct",
+                name: "IX_CompletedOrders_UserId",
+                table: "CompletedOrders",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderedProducts_CanceledOrderId",
+                table: "OrderedProducts",
+                column: "CanceledOrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderedProducts_CompletedOrderId",
+                table: "OrderedProducts",
+                column: "CompletedOrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderedProducts_OrderId",
+                table: "OrderedProducts",
                 column: "OrderId");
 
             migrationBuilder.CreateIndex(
@@ -151,8 +240,8 @@ namespace MartiviApiCore.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Product_CategoryId",
-                table: "Product",
+                name: "IX_Products_CategoryId",
+                table: "Products",
                 column: "CategoryId");
         }
 
@@ -162,10 +251,16 @@ namespace MartiviApiCore.Migrations
                 name: "ChatMessage");
 
             migrationBuilder.DropTable(
-                name: "OrderedProduct");
+                name: "OrderedProducts");
 
             migrationBuilder.DropTable(
-                name: "Product");
+                name: "Products");
+
+            migrationBuilder.DropTable(
+                name: "CanceledOrders");
+
+            migrationBuilder.DropTable(
+                name: "CompletedOrders");
 
             migrationBuilder.DropTable(
                 name: "Orders");
