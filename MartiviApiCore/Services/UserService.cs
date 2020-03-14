@@ -82,7 +82,20 @@ namespace MartiviApi.Services
 
         public void Update(User userParam, string password = null)
         {
-            var user = _context.Users.Find(userParam.UserId);
+            var user = _context.Users.Include("UserAddresses").FirstOrDefault(u => u.UserId == userParam.UserId);
+
+            var pUser = userParam.UserAddresses.FirstOrDefault(u => u.IsPrimary);
+            if (pUser != null)
+            {
+                foreach(var u in user.UserAddresses)
+                {
+                    if (u.UserAddressId == pUser.UserAddressId) u.IsPrimary = true;
+                    else u.IsPrimary = false;
+                }
+            }
+
+           
+           
 
             if (user == null)
                 throw new AppException("User not found");
@@ -106,6 +119,8 @@ namespace MartiviApi.Services
 
             if (!string.IsNullOrWhiteSpace(userParam.ProfileImageUrl))
                 user.ProfileImageUrl = userParam.ProfileImageUrl;
+
+
 
             // update password if provided
             if (!string.IsNullOrWhiteSpace(password))

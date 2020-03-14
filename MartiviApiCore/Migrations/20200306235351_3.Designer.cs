@@ -4,14 +4,16 @@ using MartiviApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MartiviApiCore.Migrations
 {
     [DbContext(typeof(MartiviDbContext))]
-    partial class MartiviDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200306235351_3")]
+    partial class _3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,9 +27,6 @@ namespace MartiviApiCore.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int?>("OrderAddressId")
-                        .HasColumnType("int");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
@@ -45,8 +44,6 @@ namespace MartiviApiCore.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("CanceledOrderId");
-
-                    b.HasIndex("OrderAddressId");
 
                     b.HasIndex("UserId");
 
@@ -78,9 +75,6 @@ namespace MartiviApiCore.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("OrderAddressId")
-                        .HasColumnType("int");
-
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
@@ -98,8 +92,6 @@ namespace MartiviApiCore.Migrations
 
                     b.HasKey("CompletedOrderId");
 
-                    b.HasIndex("OrderAddressId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("CompletedOrders");
@@ -111,9 +103,6 @@ namespace MartiviApiCore.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int?>("OrderAddressId")
-                        .HasColumnType("int");
 
                     b.Property<long>("OrderTimeTicks")
                         .HasColumnType("bigint");
@@ -128,8 +117,6 @@ namespace MartiviApiCore.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("OrderId");
-
-                    b.HasIndex("OrderAddressId");
 
                     b.HasIndex("UserId");
 
@@ -302,37 +289,7 @@ namespace MartiviApiCore.Migrations
                     b.ToTable("ChatMessage");
                 });
 
-            modelBuilder.Entity("MartiviApiCore.Models.Users.OrderAddress", b =>
-                {
-                    b.Property<int>("OrderAddressId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AddressType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Coordinates")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomerName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsPrimary")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("MobileNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("OrderAddressId");
-
-                    b.ToTable("OrderAddress");
-                });
-
-            modelBuilder.Entity("MartiviApiCore.Models.Users.UserAddress", b =>
+            modelBuilder.Entity("MartiviApi.Models.Users.UserAddress", b =>
                 {
                     b.Property<int>("UserAddressId")
                         .ValueGeneratedOnAdd()
@@ -343,9 +300,6 @@ namespace MartiviApiCore.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("AddressType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Coordinates")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CustomerName")
@@ -369,10 +323,6 @@ namespace MartiviApiCore.Migrations
 
             modelBuilder.Entity("MartiviApi.Models.CanceledOrder", b =>
                 {
-                    b.HasOne("MartiviApiCore.Models.Users.OrderAddress", "OrderAddress")
-                        .WithMany()
-                        .HasForeignKey("OrderAddressId");
-
                     b.HasOne("MartiviApi.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
@@ -380,10 +330,6 @@ namespace MartiviApiCore.Migrations
 
             modelBuilder.Entity("MartiviApi.Models.CompletedOrder", b =>
                 {
-                    b.HasOne("MartiviApiCore.Models.Users.OrderAddress", "OrderAddress")
-                        .WithMany()
-                        .HasForeignKey("OrderAddressId");
-
                     b.HasOne("MartiviApi.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
@@ -391,10 +337,6 @@ namespace MartiviApiCore.Migrations
 
             modelBuilder.Entity("MartiviApi.Models.Order", b =>
                 {
-                    b.HasOne("MartiviApiCore.Models.Users.OrderAddress", "OrderAddress")
-                        .WithMany()
-                        .HasForeignKey("OrderAddressId");
-
                     b.HasOne("MartiviApi.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
@@ -433,7 +375,7 @@ namespace MartiviApiCore.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("MartiviApiCore.Models.Users.UserAddress", b =>
+            modelBuilder.Entity("MartiviApi.Models.Users.UserAddress", b =>
                 {
                     b.HasOne("MartiviApi.Models.User", null)
                         .WithMany("UserAddresses")

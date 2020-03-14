@@ -1,4 +1,5 @@
 ﻿
+using MartiviApiCore.Models.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,5 +16,6 @@ namespace MartiviApi.Models.Users
         public string Phone { get; set; }
         public string UserAddress { get; set; }
         public string Password { get; set; }
+        public virtual ICollection<UserAddress> UserAddresses { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using MartiviApi.Models;
 using MartiviApi.Models.Users;
+using MartiviApiCore.Models.Users;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -22,10 +23,8 @@ namespace MartiviApi.Models
         public string LastName { get; set; }
         public string Username { get; set; }
         public string Phone { get; set; }
-        public string UserAddress { get; set; }
-        
 
-      
+        public virtual ICollection<UserAddress> UserAddresses { get; set; }
         public virtual ICollection<ChatMessage> Messages { get; set; }
 
       [JsonIgnore]

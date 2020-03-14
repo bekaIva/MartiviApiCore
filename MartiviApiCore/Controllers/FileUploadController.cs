@@ -42,7 +42,7 @@ namespace MartiviApiCore.Controllers
                 int userid;
                 if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest("no user id"+ User.Identity.Name);
                 var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
-                if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
+                if (user==null) return BadRequest("არაავტორიზებული მომხმარებელი");
 
                 if (!Directory.Exists("Images"))
                 {

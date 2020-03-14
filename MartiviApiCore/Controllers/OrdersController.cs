@@ -145,10 +145,6 @@ namespace MartiviApi.Controllers
         [Route("SetOrderStatus/")]
         public IActionResult PostSetOrderStatus(Order order)
         {
-           
-
-
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -255,7 +251,7 @@ namespace MartiviApi.Controllers
         [HttpPost]
         public IActionResult GetOrders(User user)
         {
-            var orders = martiviDbContext.Orders.Include("OrderedProducts").Include("User").Where(o => o.User.UserId == user.UserId);
+            var orders = martiviDbContext.Orders.Include("OrderedProducts").Include("OrderAddress").Include("User").Include("User.UserAddresses").Where(o => o.User.UserId == user.UserId);
             if (orders == null)
             {
                 return NotFound();
@@ -272,7 +268,7 @@ namespace MartiviApi.Controllers
             var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
             if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
 
-            var orders = martiviDbContext.Orders.Include("OrderedProducts").Include("User");
+            var orders = martiviDbContext.Orders.Include("OrderedProducts").Include("OrderAddress").Include("User").Include("User.UserAddresses");
             if (orders == null)
             {
                 return NotFound();

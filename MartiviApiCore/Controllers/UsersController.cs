@@ -20,6 +20,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.SignalR;
 using MartiviApiCore.Chathub;
+using MartiviApiCore.Models.Users;
 
 namespace MartiviApiCore.Controllers
 {
@@ -75,6 +76,7 @@ namespace MartiviApiCore.Controllers
                 Username = user.Username,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
+                Type = user.Type,
                 Token = tokenString
             });
         }
@@ -145,6 +147,19 @@ namespace MartiviApiCore.Controllers
             return Ok(user);
         }
 
+
+        [HttpGet("GetAdresses")]
+        [Authorize]
+        public IActionResult GetAdresses()
+        {
+
+            int userid;
+            if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest("no user id" + User.Identity.Name);
+
+            var user = martiviDbContext.Users.Include("UserAddresses").FirstOrDefault(user => user.UserId == userid);
+            return Ok(user.UserAddresses);
+        }
+
         [HttpPost("Update")]
         [Authorize]
         public IActionResult Update([FromBody]UpdateModel model)
@@ -161,6 +176,57 @@ namespace MartiviApiCore.Controllers
             {
                 // update user 
                 _userService.Update(user, model.Password);
+                return Ok();
+            }
+            catch (AppException ex)
+            {
+                // return error message if there was an exception
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("AddAddress")]
+        [Authorize]
+        public IActionResult AddAddress(UserAddress address)
+        {
+            // map model to entity and set id
+
+            int userid;
+            if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest("no user id" + User.Identity.Name);
+
+            var user = martiviDbContext.Users.Include("UserAddresses").FirstOrDefault(user => user.UserId == userid);
+            
+
+            try
+            {
+                user.UserAddresses.Add(address);
+                martiviDbContext.SaveChanges();
+                return Ok();
+            }
+            catch (AppException ex)
+            {
+                // return error message if there was an exception
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("RemoveAddress")]
+        [Authorize]
+        public IActionResult RemoveAddress(UserAddress address)
+        {
+            // map model to entity and set id
+
+            int userid;
+            if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest("no user id" + User.Identity.Name);
+
+            var user = martiviDbContext.Users.Include("UserAddresses").FirstOrDefault(user => user.UserId == userid);
+
+
+            try
+            {
+                var ua = user.UserAddresses.FirstOrDefault(a => a.UserAddressId == address.UserAddressId);
+                user.UserAddresses.Remove(ua);
+                martiviDbContext.SaveChanges();
                 return Ok();
             }
             catch (AppException ex)
