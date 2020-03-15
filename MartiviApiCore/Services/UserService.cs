@@ -50,12 +50,12 @@ namespace MartiviApi.Services
 
         public IEnumerable<User> GetAll()
         {
-            return _context.Users;
+            return _context.Users.Include("UserAddresses");
         }
 
         public User GetById(int id)
         {
-            return _context.Users.FirstOrDefault(user => user.UserId == id);
+            return _context.Users.Include("UserAddresses").FirstOrDefault(user => user.UserId == id);
             //return _context.Users.Include("Messages").FirstOrDefault(user => user.UserId == id);
         }
 
