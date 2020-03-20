@@ -138,13 +138,13 @@ namespace MartiviApi.Services
 
         public void Delete(int id)
         {
-            var user = _context.Users.Include("Messages").FirstOrDefault(u => id == u.UserId);
-           
+
+            var user = _context.Users.Include("Messages").Include("UserAddresses").FirstOrDefault(u => id == u.UserId);
             if (user != null)
             {
-                var userOrders = _context.Orders.Include("OrderedProducts").Include("User").Where(order => order.User.UserId == user.UserId);
-                var CanceleduserOrders = _context.CanceledOrders.Include("OrderedProducts").Include("User").Where(order => order.User.UserId == user.UserId);
-                var CompleteduserOrders = _context.CompletedOrders.Include("OrderedProducts").Include("User").Where(order => order.User.UserId == user.UserId);
+                var userOrders = _context.Orders.Include("OrderedProducts").Include("User").Include("User.UserAddresses").Where(order => order.User.UserId == user.UserId);
+                var CanceleduserOrders = _context.CanceledOrders.Include("OrderedProducts").Include("User").Include("User.UserAddresses").Where(order => order.User.UserId == user.UserId);
+                var CompleteduserOrders = _context.CompletedOrders.Include("OrderedProducts").Include("User").Include("User.UserAddresses").Where(order => order.User.UserId == user.UserId);
                 _context.Orders.RemoveRange(userOrders);
                 _context.CanceledOrders.RemoveRange(CanceleduserOrders);
                 _context.CompletedOrders.RemoveRange(CompleteduserOrders);

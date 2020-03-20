@@ -240,8 +240,15 @@ namespace MartiviApiCore.Controllers
         [Authorize]
         public IActionResult Delete(int id)
         {
-            _userService.Delete(id);
-            return Ok();
+            try
+            {
+                _userService.Delete(id);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
     }
 

@@ -114,6 +114,7 @@ namespace MartiviApiCore
             {
                 endpoints.MapHub<ChatHub>("/chathub");
             });
+            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("MjIzNTg2QDMxMzcyZTM0MmUzME5VRUZWVjFtcnRqKzFpNE41M0Q0SVljTythVm1uYmRoYzBsSkhEbmh1aWs9");
         }
     }
 }

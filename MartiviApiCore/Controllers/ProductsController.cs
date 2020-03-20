@@ -146,6 +146,10 @@ namespace MartiviApiCore.Controllers
         [Route("Delete/{id}")]
         public IActionResult DeleteProduct(int id)
         {
+            int userid;
+            if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest();
+            var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
+            if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
             var p = martiviDbContext.Products.FirstOrDefault(p => p.ProductId == id);
             if (p != null)
             {

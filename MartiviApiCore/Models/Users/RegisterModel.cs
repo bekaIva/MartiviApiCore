@@ -17,6 +17,5 @@ namespace MartiviApi.Models.Users
         [Required]
         public  string Password { get; set; }
         public string Phone { get; set; }
-        public string UserAddress { get; set; }
     }
 }

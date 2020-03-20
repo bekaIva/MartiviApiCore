@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using MartiviApi.Data;
+using MartiviApi.Models;
 using MartiviApiCore.Chathub;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -32,6 +33,7 @@ namespace MartiviApi.Controllers
             return Ok(categories);
         }
         
+
         [Route("id/{id}")]
         [HttpGet]
         public IActionResult GetCategories(int id)
@@ -44,10 +46,16 @@ namespace MartiviApi.Controllers
 
             return Ok(categories);
         }
+
+        [Authorize]
         [Route("delete/{id}")]
         [HttpGet]
         public IActionResult DeleteCategorie(int id)
         {
+            int userid;
+            if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest();
+            var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
+            if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
             var category = martiviDbContext.Categories.Include("Products").FirstOrDefault(c => c.CategoryId == id);
             if (category != null)
             {
