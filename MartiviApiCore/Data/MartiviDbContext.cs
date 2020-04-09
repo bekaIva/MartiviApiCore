@@ -4,6 +4,7 @@ using System.Linq;
 using System.Web;
 using MartiviApi.Models;
 using MartiviApi.Models.Users;
+using MartiviApiCore.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace MartiviApi.Data
@@ -20,7 +21,7 @@ namespace MartiviApi.Data
         public DbSet<CompletedOrder> CompletedOrders { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<OrderedProduct> OrderedProducts { get; set; }
-        
+        public DbSet<Info> Infos { get; set; }
         public DbSet<Product> Products { get; set; }
     }
 }

@@ -48,11 +48,11 @@ namespace MartiviApi.Controllers
             }
             var exsistingOrder = martiviDbContext.Orders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == order.OrderId);
             exsistingOrder.User = null;
-           
 
-            foreach(var p in exsistingOrder.OrderedProducts)
+
+            foreach (var p in exsistingOrder.OrderedProducts)
             {
-                martiviDbContext.Remove(p);
+                martiviDbContext.OrderedProducts.Remove(p);
             }
             exsistingOrder.OrderedProducts.Clear();
             martiviDbContext.SaveChanges();
