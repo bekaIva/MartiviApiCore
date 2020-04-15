@@ -17,8 +17,22 @@ namespace MartiviApi.Models
     }
     public enum PaymentStatus
     {
-        Paid,
-        NotPaid
+        NotPaid,
+        PENDING,
+        PROCESS,
+        ON_HOLD,
+        COMPLETED,
+        CANCELED,
+        NOT_FINISHED,
+        SAVED,
+        PREPARED,
+        CLEARED,
+        DENIED,
+        EXPIRED,
+        FAILED,
+        REFUNDED,
+        DECLINED,
+        RETURNED
     }
     public class Order
     {
@@ -27,7 +41,8 @@ namespace MartiviApi.Models
         public PaymentStatus Payment { get; set; }
         public User User { get; set; }
         public long OrderTimeTicks { get; set; }
-
+        public string Hash { get; set; }
+        public string TransactionID { get; set; }
         [NotMapped]
         public TimeSpan OrderTime
         {

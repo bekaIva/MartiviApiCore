@@ -25,12 +25,34 @@ namespace MartiviApiCore.Chathub
 
             var c = Context.User.Identity.Name;
             var us = Clients.User(c);
-            await us.SendAsync("ReceiveMessage", user, "gamarjoba");
         }
 
         public async Task LeaveChat(string user)
         {
 
+        }
+        void RemoveOldItems<T>(ICollection<T> list)
+        {
+            try
+            {
+                if (list.Count > 30)
+                {
+                    var colList = list.ToList();
+                    List<T> itemsToremove = new List<T>();
+                    for (int i = 0; i < list.Count-30; i++)
+                    {
+                        itemsToremove.Add(colList[i]);
+                    }
+                    foreach (var item in itemsToremove)
+                    {
+                        list.Remove(item);
+                    }
+                }
+            }
+            catch
+            {
+
+            }
         }
         public async Task SendMessage(ChatMessage chatMessage)
         {
@@ -40,13 +62,14 @@ namespace MartiviApiCore.Chathub
                 var martiviDbContext = scope.ServiceProvider.GetRequiredService<MartiviDbContext>();
 
                 //...
-
+                
                 int id;
                 int.TryParse(Context.User.Identity.Name, out id);
                 if (id > 0 != true) return;
                 var senderUser = martiviDbContext.Users.Include("Messages").Single(c => c.UserId == id);
                 chatMessage.OwnerProfileImage = senderUser.ProfileImageUrl;
                 var chmSerialized = JsonConvert.SerializeObject(chatMessage);
+                RemoveOldItems(senderUser.Messages);
                 senderUser.Messages.Add(chatMessage);
                 switch (chatMessage.Target)
                 {
@@ -58,6 +81,7 @@ namespace MartiviApiCore.Chathub
                                 if (adminuser.UserId == id) continue;
                                 var incomingMessage = JsonConvert.DeserializeObject<ChatMessage>(chmSerialized);
                                 incomingMessage.TemplateType = TemplateType.IncomingText;
+                                RemoveOldItems(adminuser.Messages);
                                 adminuser.Messages.Add(incomingMessage);
                                 var chatAdminuser = Clients.User(adminuser.UserId.ToString());
                                 if (chatAdminuser != null) chatAdminuser.SendAsync("ReceiveMessage", incomingMessage);
@@ -71,6 +95,7 @@ namespace MartiviApiCore.Chathub
                                 if (targetUser.UserId == id) return;
                                 var incomingMessage = JsonConvert.DeserializeObject<ChatMessage>(chmSerialized);
                                 incomingMessage.TemplateType = TemplateType.IncomingText;
+                            RemoveOldItems(targetUser.Messages);
                             targetUser.Messages.Add(incomingMessage);
                                 var chattargetUser = Clients.User(targetUser.UserId.ToString());
                                 if (chattargetUser != null) chattargetUser.SendAsync("ReceiveMessage", incomingMessage);
@@ -86,6 +111,7 @@ namespace MartiviApiCore.Chathub
                                 if (targetuser.UserId == id) continue;
                                 var incomingMessage = JsonConvert.DeserializeObject<ChatMessage>(chmSerialized);
                                 incomingMessage.TemplateType = TemplateType.IncomingText;
+                                RemoveOldItems(targetuser.Messages);
                                 targetuser.Messages.Add(incomingMessage);
                                 var chattargetuser = Clients.User(targetuser.UserId.ToString());
                                 if (chattargetuser != null) chattargetuser.SendAsync("ReceiveMessage", incomingMessage);
@@ -100,6 +126,7 @@ namespace MartiviApiCore.Chathub
                                 if (nonadminuser.UserId == id) continue;
                                 var incomingMessage = JsonConvert.DeserializeObject<ChatMessage>(chmSerialized);
                                 incomingMessage.TemplateType = TemplateType.IncomingText;
+                                RemoveOldItems(nonadminuser.Messages);
                                 nonadminuser.Messages.Add(incomingMessage);
                                 var chatnonadminuser = Clients.User(nonadminuser.UserId.ToString());
                                 if (chatnonadminuser != null) chatnonadminuser.SendAsync("ReceiveMessage", incomingMessage);

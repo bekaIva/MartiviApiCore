@@ -5,17 +5,21 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web.UI;
 using AutoMapper;
 using MartiviApi.Data;
 using MartiviApi.Models;
+using MartiviApi.Models.Users;
 using MartiviApiCore.Chathub;
+using MartiviApiCore.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Syncfusion.HtmlConverter;
 
 namespace MartiviApi.Controllers
@@ -26,6 +30,7 @@ namespace MartiviApi.Controllers
 
     public class OrdersController : ControllerBase
     {
+        UnipayMerchant merchant = new UnipayMerchant();
         private readonly IWebHostEnvironment _webhostingEnvironment;
         MartiviDbContext martiviDbContext;
         IMapper mapper;
@@ -42,36 +47,44 @@ namespace MartiviApi.Controllers
         [Route("DeleteOrder/")]
         public IActionResult PostDeleteOrder(Order order)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var exsistingOrder = martiviDbContext.Orders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == order.OrderId);
+                exsistingOrder.User = null;
+
+
+                foreach (var p in exsistingOrder.OrderedProducts)
+                {
+                    martiviDbContext.OrderedProducts.Remove(p);
+                }
+                exsistingOrder.OrderedProducts.Clear();
+                martiviDbContext.SaveChanges();
+
+
+
+                martiviDbContext.Orders.Remove(exsistingOrder);
+                martiviDbContext.SaveChanges();
+
+                var admins = martiviDbContext.Users.Where(user => user.Type == UserType.Admin);
+                foreach (var admin in admins)
+                {
+                    hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrderListing");
+                }
+
+                hubContext.Clients.All.SendAsync("UpdateListing");
+                hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrderListing");
+                hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing");
+                return StatusCode(StatusCodes.Status201Created);
             }
-            var exsistingOrder = martiviDbContext.Orders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == order.OrderId);
-            exsistingOrder.User = null;
-
-
-            foreach (var p in exsistingOrder.OrderedProducts)
+            catch (Exception ee)
             {
-                martiviDbContext.OrderedProducts.Remove(p);
+                return StatusCode(StatusCodes.Status201Created,ee.Message);
+
             }
-            exsistingOrder.OrderedProducts.Clear();
-            martiviDbContext.SaveChanges();
-
-            
-
-            martiviDbContext.Orders.Remove(exsistingOrder);
-            martiviDbContext.SaveChanges();
-
-           var admins = martiviDbContext.Users.Where(user => user.Type == UserType.Admin);
-            foreach(var admin in admins)
-            {
-                hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrderListing");
-            }
-
-            hubContext.Clients.All.SendAsync("UpdateListing");
-            hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrderListing");
-            hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing"); ;
-            return StatusCode(StatusCodes.Status201Created);
 
 
         }
@@ -219,8 +232,9 @@ namespace MartiviApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult Post(Order order)
+        public async Task<IActionResult> Post(Order order)
         {
+            
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -241,6 +255,10 @@ namespace MartiviApi.Controllers
             order.User = user;
             martiviDbContext.Orders.Add(order);
             martiviDbContext.SaveChanges();
+
+            
+
+
             var admins = martiviDbContext.Users.Where(user => user.Type == UserType.Admin);
             foreach (var admin in admins)
             {
@@ -250,10 +268,60 @@ namespace MartiviApi.Controllers
             hubContext.Clients.All.SendAsync("UpdateListing");
             hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrderListing");
             hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing");
-            return StatusCode(StatusCodes.Status201Created);
+
+           
+
+            return StatusCode(StatusCodes.Status201Created,order);
 
 
         }
+
+        [HttpPost]
+        [Route("Checkout/")]
+        public async Task<IActionResult> Checkout(Order order)
+        {
+            try
+            {
+                var exsistingOrder = martiviDbContext.Orders.Include("OrderedProducts").Include("User").Include("User.UserAddresses").Include("OrderAddress").FirstOrDefault(o => o.OrderId == order.OrderId);
+                if (exsistingOrder == null) return BadRequest("Order doesn't exists");              
+                var res = await merchant.Chekout(exsistingOrder);                
+                if (res == null) throw new Exception("Unknown error returned from merchant.");
+                try
+                {
+                    if (res.Errorcode == 0)
+                    {
+                        var checkRes = await merchant.CheckStatus(exsistingOrder);                        
+                       
+                        if (res.Errorcode == 0)
+                        {
+                            PaymentStatus status;
+                            if (Enum.TryParse<PaymentStatus>(checkRes.Data.Status, out status))
+                            {
+                                exsistingOrder.Payment = status;
+                                martiviDbContext.SaveChanges();
+                                hubContext.Clients.User(exsistingOrder.User.UserId.ToString()).SendAsync("UpdateOrderListing");
+                                
+                            }
+
+                        }
+                    }
+                }
+                catch
+                {
+
+                }
+
+
+                martiviDbContext.SaveChanges();
+                return Ok(res);
+            }
+            catch (Exception ee)
+            {
+                return BadRequest("Checkout failed with error: " + ee.Message);
+            }
+        }
+
+
 
         [Route("GetOrders/")]
         [HttpPost]
