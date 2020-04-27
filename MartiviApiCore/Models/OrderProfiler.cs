@@ -11,8 +11,8 @@ namespace MartiviApiCore.Models
     {
         public OrderProfile()
         {
-            CreateMap<Order, CanceledOrder>();
-            CreateMap<Order, CompletedOrder>();
+            //CreateMap<Order, CanceledOrder>();
+            //CreateMap<Order, CompletedOrder>();
         }
     }
 }

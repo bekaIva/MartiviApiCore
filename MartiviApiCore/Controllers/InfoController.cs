@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using Microsoft.AspNetCore.SignalR;
 using MartiviApiCore.Chathub;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MartiviApiCore.Controllers
 {
@@ -23,6 +24,8 @@ namespace MartiviApiCore.Controllers
             hubContext = hub;
             context = dbContext;
         }
+
+        [Authorize]
         [HttpPost("AddInfo")]
         public IActionResult AddInfo(Info info)
         {
@@ -47,6 +50,49 @@ namespace MartiviApiCore.Controllers
             Info info = context.Infos.FirstOrDefault();
 
             return Ok(info);
+        }
+        
+        [HttpGet("GetSettings")]
+        public IActionResult GetSettings()
+        {
+            return Ok(context.Settings);
+        }
+
+        [HttpPost("SetSettings")]
+        [Authorize]
+        public IActionResult SetSetting(Setting[] settings)
+        {
+            try
+            {
+                foreach (var setting in settings) 
+                {
+                    try
+                    {
+                        var set = context.Settings.FirstOrDefault(s => s.Name == setting.Name);
+                        if (set != null)
+                        {
+                            set.Value = setting.Value;
+                        }
+                        else
+                        {
+                            context.Settings.Add(setting);
+                        }
+                        
+                    }
+                    catch
+                    {
+
+                    }
+                    
+                }
+                context.SaveChanges();
+                hubContext.Clients.All.SendAsync("UpdateSettings");
+                return Ok();
+            }
+            catch(Exception ee)
+            {
+                return BadRequest(ee.Message);
+            }
         }
     }
 }

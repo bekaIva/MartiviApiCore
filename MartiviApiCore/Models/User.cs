@@ -27,7 +27,7 @@ namespace MartiviApi.Models
         public virtual ICollection<UserAddress> UserAddresses { get; set; }
         public virtual ICollection<ChatMessage> Messages { get; set; }
 
-      [JsonIgnore]
+        [JsonIgnore]
         public byte[] PasswordHash { get; set; }
         [JsonIgnore]
         public byte[] PasswordSalt { get; set; }

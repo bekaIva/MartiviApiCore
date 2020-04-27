@@ -100,8 +100,8 @@ namespace MartiviApi.Controllers
             var exsistingOrder = martiviDbContext.Orders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == order.OrderId);
 
             exsistingOrder.Status = OrderStatus.Canceled;
-            var canceledorder = mapper.Map<CanceledOrder>(exsistingOrder);
-            martiviDbContext.CanceledOrders.Add(canceledorder);
+            //var canceledorder = mapper.Map<CanceledOrder>(exsistingOrder);
+            //martiviDbContext.CanceledOrders.Add(canceledorder);
 
             foreach (var p in exsistingOrder.OrderedProducts)
             {
@@ -142,8 +142,8 @@ namespace MartiviApi.Controllers
             var exsistingOrder = martiviDbContext.Orders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == order.OrderId);
 
             exsistingOrder.Status = OrderStatus.Completed;
-            var CompletedOrder = mapper.Map<CompletedOrder>(exsistingOrder);
-            martiviDbContext.CompletedOrders.Add(CompletedOrder);
+            //var CompletedOrder = mapper.Map<CompletedOrder>(exsistingOrder);
+            //martiviDbContext.CompletedOrders.Add(CompletedOrder);
 
             foreach (var p in exsistingOrder.OrderedProducts)
             {
@@ -174,42 +174,42 @@ namespace MartiviApi.Controllers
             if (exsistingOrder.Status == order.Status) return Ok();
             exsistingOrder.Status = order.Status;
 
-            switch (order.Status)
-            {
-                case OrderStatus.Accepted:
-                    {
-                        var canceled = martiviDbContext.CanceledOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-                        if (canceled != null) martiviDbContext.CanceledOrders.Remove(canceled);
+            //switch (order.Status)
+            //{
+            //    case OrderStatus.Accepted:
+            //        {
+            //            var canceled = martiviDbContext.CanceledOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
+            //            if (canceled != null) martiviDbContext.CanceledOrders.Remove(canceled);
 
-                        var completed = martiviDbContext.CompletedOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-                        if (completed != null) martiviDbContext.CompletedOrders.Remove(completed);
+            //            var completed = martiviDbContext.CompletedOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
+            //            if (completed != null) martiviDbContext.CompletedOrders.Remove(completed);
 
-                        martiviDbContext.SaveChanges();
-                        break;
-                    }
-                case OrderStatus.Canceled:
-                    {
-                        var canceled = martiviDbContext.CanceledOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-                        if (canceled == null) martiviDbContext.CanceledOrders.Add(mapper.Map<CanceledOrder>(exsistingOrder));
+            //            martiviDbContext.SaveChanges();
+            //            break;
+            //        }
+            //    case OrderStatus.Canceled:
+            //        {
+            //            var canceled = martiviDbContext.CanceledOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
+            //            if (canceled == null) martiviDbContext.CanceledOrders.Add(mapper.Map<CanceledOrder>(exsistingOrder));
 
-                        var completed = martiviDbContext.CompletedOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-                        if (completed != null) martiviDbContext.CompletedOrders.Remove(completed);
+            //            var completed = martiviDbContext.CompletedOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
+            //            if (completed != null) martiviDbContext.CompletedOrders.Remove(completed);
 
-                        martiviDbContext.SaveChanges();
-                        break;
-                    }
-                case OrderStatus.Completed:
-                    {
-                        var canceled = martiviDbContext.CanceledOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-                        if (canceled != null) martiviDbContext.CanceledOrders.Remove(canceled);
+            //            martiviDbContext.SaveChanges();
+            //            break;
+            //        }
+            //    case OrderStatus.Completed:
+            //        {
+            //            var canceled = martiviDbContext.CanceledOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
+            //            if (canceled != null) martiviDbContext.CanceledOrders.Remove(canceled);
 
-                        var completed = martiviDbContext.CompletedOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-                        if (completed == null) martiviDbContext.CompletedOrders.Add(mapper.Map<CompletedOrder>(exsistingOrder));
+            //            var completed = martiviDbContext.CompletedOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
+            //            if (completed == null) martiviDbContext.CompletedOrders.Add(mapper.Map<CompletedOrder>(exsistingOrder));
 
-                        martiviDbContext.SaveChanges();
-                        break;
-                    }
-            }
+            //            martiviDbContext.SaveChanges();
+            //            break;
+            //        }
+            //}
 
             //var CompletedOrder = mapper.Map<CompletedOrder>(exsistingOrder);
             //martiviDbContext.CompletedOrders.Add(CompletedOrder);
@@ -223,8 +223,8 @@ namespace MartiviApi.Controllers
             //    }
             //}
 
-            //martiviDbContext.SaveChanges();
-            hubContext.Clients.All.SendAsync("UpdateListing");
+            martiviDbContext.SaveChanges();
+            hubContext.Clients.All.SendAsync("UpdateOrderListing");
             hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
             hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrder", exsistingOrder);
 
@@ -262,6 +262,7 @@ namespace MartiviApi.Controllers
             var admins = martiviDbContext.Users.Where(user => user.Type == UserType.Admin);
             foreach (var admin in admins)
             {
+                hubContext.Clients.User(admin.UserId.ToString()).SendAsync("NewOrderMade");
                 hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrderListing");
             }
 
@@ -282,8 +283,10 @@ namespace MartiviApi.Controllers
         {
             try
             {
-                var exsistingOrder = martiviDbContext.Orders.Include("OrderedProducts").Include("User").Include("User.UserAddresses").Include("OrderAddress").FirstOrDefault(o => o.OrderId == order.OrderId);
-                if (exsistingOrder == null) return BadRequest("Order doesn't exists");              
+                var exsistingOrder = martiviDbContext.Orders.Include(ord => ord.OrderedProducts).Include(prd => prd.User).ThenInclude(usr => usr.UserAddresses).ThenInclude(uadr => uadr.Coordinates).Include(ord => ord.OrderAddress).ThenInclude(oad => oad.Coordinates).FirstOrDefault(o => o.OrderId == order.OrderId);
+                if (exsistingOrder == null) return BadRequest("Order doesn't exists");
+                if (exsistingOrder.Status == OrderStatus.Completed) throw new Exception("შესრულებული შეკვეთა არ საჭირეობს გადახდას.");
+                if (exsistingOrder.Status == OrderStatus.Canceled) throw new Exception("გაუქმებული შეკვეთა არ საჭირეობს გადახდას.");
                 var res = await merchant.Chekout(exsistingOrder);                
                 if (res == null) throw new Exception("Unknown error returned from merchant.");
                 try
@@ -300,6 +303,15 @@ namespace MartiviApi.Controllers
                                 exsistingOrder.Payment = status;
                                 martiviDbContext.SaveChanges();
                                 hubContext.Clients.User(exsistingOrder.User.UserId.ToString()).SendAsync("UpdateOrderListing");
+                                try
+                                {
+                                    var adminUsers = martiviDbContext.Users.Where(new Func<User, bool>((user) => { return user.Type == UserType.Admin; }));
+                                    foreach(var admin in adminUsers)
+                                    {
+                                        hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrderListing");
+                                    }
+                                }
+                                catch { }
                                 
                             }
 
@@ -317,7 +329,7 @@ namespace MartiviApi.Controllers
             }
             catch (Exception ee)
             {
-                return BadRequest("Checkout failed with error: " + ee.Message);
+                return BadRequest("Checkout failed with an error: " + ee.Message);
             }
         }
 
@@ -327,7 +339,7 @@ namespace MartiviApi.Controllers
         [HttpPost]
         public IActionResult GetOrders(User user)
         {
-            var orders = martiviDbContext.Orders.Include("OrderedProducts").Include("OrderAddress").Include("User").Include("User.UserAddresses").Where(o => o.User.UserId == user.UserId);
+            var orders = martiviDbContext.Orders.Include(ord => ord.OrderedProducts).Include(ord => ord.OrderAddress).ThenInclude(ordadr=>ordadr.Coordinates).Include(ord => ord.User).ThenInclude(usr => usr.UserAddresses).ThenInclude(uadr => uadr.Coordinates).Where(o => o.User.UserId == user.UserId);
             if (orders == null)
             {
                 return NotFound();
@@ -344,7 +356,7 @@ namespace MartiviApi.Controllers
             var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
             if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
 
-            var orders = martiviDbContext.Orders.Include("OrderedProducts").Include("OrderAddress").Include("User").Include("User.UserAddresses");
+            var orders = martiviDbContext.Orders.Include(ord=>ord.OrderedProducts).Include(ord=>ord.OrderAddress).ThenInclude(orda=>orda.Coordinates).Include(ord=>ord.User).ThenInclude(usr=>usr.UserAddresses).ThenInclude(usradr=>usradr.Coordinates);
             if (orders == null)
             {
                 return NotFound();
@@ -383,6 +395,33 @@ namespace MartiviApi.Controllers
 
 
         }
+
+        [HttpPost]
+        [Route("SetSeen/")]
+        public IActionResult PostSetSeen(Order order)
+        {
+            try
+            {
+                int userid;
+                if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest();
+                var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
+                if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
+                var exsistingOrder = martiviDbContext.Orders.FirstOrDefault(o => o.OrderId == order.OrderId);
+
+
+                exsistingOrder.IsSeen = true;
+                martiviDbContext.SaveChanges();
+                hubContext.Clients.User(user.UserId.ToString()).SendAsync("UpdateOrderListing");
+                return Ok();
+            }
+            catch (Exception ee)
+            {
+                return BadRequest(ee.Message);
+            }
+
+
+        }
+
         protected Stream GenerateInvoicePDF(Order order)
         {
             //Dummy data for Invoice (Bill).

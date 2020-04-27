@@ -1,0 +1,15 @@
+﻿@model MartiviApiCore.Models.HomeViewModel
+
+@{
+    ViewData["Title"] = "Home";
+}
+
+<h1>Home</h1>
+
+<h4>Martivi</h4>
+<hr />
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

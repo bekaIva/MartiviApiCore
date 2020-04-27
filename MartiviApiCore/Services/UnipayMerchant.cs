@@ -91,7 +91,7 @@ namespace MartiviApiCore.Services
         //        // TODO: use the buffer that was read
         //    }
         //}
-        CreateOrderModel GenerateOrderCreateRequest(Order order)
+       public CreateOrderModel GenerateOrderCreateRequest(Order order)
         {
             CreateOrderModel om = new CreateOrderModel();
             om.MerchantID = MerchantID;
@@ -107,16 +107,8 @@ namespace MartiviApiCore.Services
 
 
 
-            if (order.OrderedProducts.Count == 1)
-            {
-                om.OrderName = order.OrderedProducts.First().Name;
-                om.OrderDescription = order.OrderedProducts.First().Description;
-            }
-            else
-            {
-
                 om.Items = new List<string>(order.OrderedProducts.Select((p) => { return (p.Price * 100) + "|" + p.Quantity.ToString() + "|" + p.Name + "|" + p.Description; }));
-            }
+           
             string PasswordStr = GetPassword(om);
 
 
@@ -132,6 +124,7 @@ namespace MartiviApiCore.Services
 
             foreach (PropertyInfo prop in props)
             {
+                if (prop.Name == "Hash") continue;
                 object propValue = prop.GetValue(myObject, null);
                 if (propValue != null && propValue is string s)
                 {

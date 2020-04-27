@@ -35,19 +35,19 @@ namespace MartiviApiCore.Chathub
         {
             try
             {
-                if (list.Count > 30)
-                {
-                    var colList = list.ToList();
-                    List<T> itemsToremove = new List<T>();
-                    for (int i = 0; i < list.Count-30; i++)
-                    {
-                        itemsToremove.Add(colList[i]);
-                    }
-                    foreach (var item in itemsToremove)
-                    {
-                        list.Remove(item);
-                    }
-                }
+                //if (list.Count > 30)
+                //{
+                //    var colList = list.ToList();
+                //    List<T> itemsToremove = new List<T>();
+                //    for (int i = 0; i < list.Count-30; i++)
+                //    {
+                //        itemsToremove.Add(colList[i]);
+                //    }
+                //    foreach (var item in itemsToremove)
+                //    {
+                //        list.Remove(item);
+                //    }
+                //}
             }
             catch
             {

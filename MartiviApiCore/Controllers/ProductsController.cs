@@ -141,7 +141,6 @@ namespace MartiviApiCore.Controllers
         }
 
 
-        //http://martivi.net/api/upload/Images/file110e635d-d1b7-4d02-abd1-241c90a9b945
         [HttpGet]
         [Route("Delete/{id}")]
         public IActionResult DeleteProduct(int id)

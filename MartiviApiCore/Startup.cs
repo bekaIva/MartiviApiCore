@@ -19,6 +19,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using MartiviApi.Services;
 using Microsoft.IdentityModel.Tokens;
 using MartiviApiCore.Chathub;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
+using Microsoft.AspNetCore.Http;
+using MartiviApiCore.Models;
+using AspNetCoreRateLimit;
 
 namespace MartiviApiCore
 {
@@ -38,8 +43,11 @@ namespace MartiviApiCore
             services.AddCors();
             services.AddSignalR();
             services.AddControllers();
+            services.AddControllersWithViews();
             services.AddControllers().AddNewtonsoftJson();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            var emailConfig = Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
+            services.AddSingleton(emailConfig);
             var appSettingsSection = Configuration.GetSection("AppSettings");
             services.AddDbContextPool<MartiviDbContext>(options => 
             {
@@ -80,6 +88,13 @@ namespace MartiviApiCore
                 };
             });
             services.AddScoped<IUserService, UserService>();
+            services.AddOptions();
+            services.AddMemoryCache();
+            services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+            services.AddHttpContextAccessor();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -89,8 +104,14 @@ namespace MartiviApiCore
             {
                 app.UseDeveloperExceptionPage();
             }
-           
-
+            app.UseIpRateLimiting();
+            app.UseStaticFiles();;
+            app.UseStaticFiles(new StaticFileOptions()
+            {
+                FileProvider = new PhysicalFileProvider(
+            Path.Combine(Directory.GetCurrentDirectory(), @"Images")),
+                RequestPath = new PathString("/Images")
+            });
             app.UseHttpsRedirection();
 
             
@@ -109,12 +130,18 @@ namespace MartiviApiCore
             {                
                 endpoints.MapControllers();
             });
-
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Home}/{id?}");
+            });
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<ChatHub>("/chathub");
             });
             Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("MjIzNTg2QDMxMzcyZTM0MmUzME5VRUZWVjFtcnRqKzFpNE41M0Q0SVljTythVm1uYmRoYzBsSkhEbmh1aWs9");
         }
+
     }
 }

@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MartiviApiCore.Migrations
 {
     [DbContext(typeof(MartiviDbContext))]
-    [Migration("20200407234647_9")]
-    partial class _9
+    [Migration("20200419142805_1")]
+    partial class _1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -20,40 +20,6 @@ namespace MartiviApiCore.Migrations
                 .HasAnnotation("ProductVersion", "3.1.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-            modelBuilder.Entity("MartiviApi.Models.CanceledOrder", b =>
-                {
-                    b.Property<int>("CanceledOrderId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int?>("OrderAddressId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<long>("OrderTimeTicks")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Payment")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("CanceledOrderId");
-
-                    b.HasIndex("OrderAddressId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CanceledOrders");
-                });
 
             modelBuilder.Entity("MartiviApi.Models.Category", b =>
                 {
@@ -73,40 +39,6 @@ namespace MartiviApiCore.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("MartiviApi.Models.CompletedOrder", b =>
-                {
-                    b.Property<int>("CompletedOrderId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int?>("OrderAddressId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<long>("OrderTimeTicks")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Payment")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("CompletedOrderId");
-
-                    b.HasIndex("OrderAddressId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CompletedOrders");
-                });
-
             modelBuilder.Entity("MartiviApi.Models.Order", b =>
                 {
                     b.Property<int>("OrderId")
@@ -114,8 +46,11 @@ namespace MartiviApiCore.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("OrderAddressId")
-                        .HasColumnType("int");
+                    b.Property<string>("Hash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsSeen")
+                        .HasColumnType("bit");
 
                     b.Property<long>("OrderTimeTicks")
                         .HasColumnType("bigint");
@@ -126,12 +61,13 @@ namespace MartiviApiCore.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<string>("TransactionID")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("OrderId");
-
-                    b.HasIndex("OrderAddressId");
 
                     b.HasIndex("UserId");
 
@@ -145,13 +81,7 @@ namespace MartiviApiCore.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("CanceledOrderId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CompletedOrderId")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -179,10 +109,6 @@ namespace MartiviApiCore.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("OrderedProductId");
-
-                    b.HasIndex("CanceledOrderId");
-
-                    b.HasIndex("CompletedOrderId");
 
                     b.HasIndex("OrderId");
 
@@ -317,9 +243,30 @@ namespace MartiviApiCore.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Version")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("InfoId");
 
                     b.ToTable("Infos");
+                });
+
+            modelBuilder.Entity("MartiviApiCore.Models.Setting", b =>
+                {
+                    b.Property<int>("SettingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("SettingId");
+
+                    b.ToTable("Settings");
                 });
 
             modelBuilder.Entity("MartiviApiCore.Models.Users.OrderAddress", b =>
@@ -335,9 +282,6 @@ namespace MartiviApiCore.Migrations
                     b.Property<string>("AddressType")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Coordinates")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CustomerName")
                         .HasColumnType("nvarchar(max)");
 
@@ -347,9 +291,39 @@ namespace MartiviApiCore.Migrations
                     b.Property<string>("MobileNumber")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
                     b.HasKey("OrderAddressId");
 
-                    b.ToTable("OrderAddress");
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.ToTable("OrderAddresses");
+                });
+
+            modelBuilder.Entity("MartiviApiCore.Models.Users.OrderAddressCoordinate", b =>
+                {
+                    b.Property<int>("OrderAddressCoordinateId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<int>("OrderAddressId")
+                        .HasColumnType("int");
+
+                    b.HasKey("OrderAddressCoordinateId");
+
+                    b.HasIndex("OrderAddressId")
+                        .IsUnique();
+
+                    b.ToTable("OrderAddressCoordinate");
                 });
 
             modelBuilder.Entity("MartiviApiCore.Models.Users.UserAddress", b =>
@@ -365,9 +339,6 @@ namespace MartiviApiCore.Migrations
                     b.Property<string>("AddressType")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Coordinates")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CustomerName")
                         .HasColumnType("nvarchar(max)");
 
@@ -377,44 +348,42 @@ namespace MartiviApiCore.Migrations
                     b.Property<string>("MobileNumber")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("UserAddressId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserAddress");
+                    b.ToTable("UserAddresses");
                 });
 
-            modelBuilder.Entity("MartiviApi.Models.CanceledOrder", b =>
+            modelBuilder.Entity("MartiviApiCore.Models.Users.UserAddressCoordinate", b =>
                 {
-                    b.HasOne("MartiviApiCore.Models.Users.OrderAddress", "OrderAddress")
-                        .WithMany()
-                        .HasForeignKey("OrderAddressId");
+                    b.Property<int>("UserAddressCoordinateId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.HasOne("MartiviApi.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-                });
+                    b.Property<double>("Latitude")
+                        .HasColumnType("float");
 
-            modelBuilder.Entity("MartiviApi.Models.CompletedOrder", b =>
-                {
-                    b.HasOne("MartiviApiCore.Models.Users.OrderAddress", "OrderAddress")
-                        .WithMany()
-                        .HasForeignKey("OrderAddressId");
+                    b.Property<double>("Longitude")
+                        .HasColumnType("float");
 
-                    b.HasOne("MartiviApi.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
+                    b.Property<int>("UserAddressId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserAddressCoordinateId");
+
+                    b.HasIndex("UserAddressId")
+                        .IsUnique();
+
+                    b.ToTable("UserAddressCoordinate");
                 });
 
             modelBuilder.Entity("MartiviApi.Models.Order", b =>
                 {
-                    b.HasOne("MartiviApiCore.Models.Users.OrderAddress", "OrderAddress")
-                        .WithMany()
-                        .HasForeignKey("OrderAddressId");
-
                     b.HasOne("MartiviApi.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
@@ -422,14 +391,6 @@ namespace MartiviApiCore.Migrations
 
             modelBuilder.Entity("MartiviApi.Models.OrderedProduct", b =>
                 {
-                    b.HasOne("MartiviApi.Models.CanceledOrder", null)
-                        .WithMany("OrderedProducts")
-                        .HasForeignKey("CanceledOrderId");
-
-                    b.HasOne("MartiviApi.Models.CompletedOrder", null)
-                        .WithMany("OrderedProducts")
-                        .HasForeignKey("CompletedOrderId");
-
                     b.HasOne("MartiviApi.Models.Order", null)
                         .WithMany("OrderedProducts")
                         .HasForeignKey("OrderId");
@@ -453,11 +414,40 @@ namespace MartiviApiCore.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MartiviApiCore.Models.Users.OrderAddress", b =>
+                {
+                    b.HasOne("MartiviApi.Models.Order", null)
+                        .WithOne("OrderAddress")
+                        .HasForeignKey("MartiviApiCore.Models.Users.OrderAddress", "OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MartiviApiCore.Models.Users.OrderAddressCoordinate", b =>
+                {
+                    b.HasOne("MartiviApiCore.Models.Users.OrderAddress", null)
+                        .WithOne("Coordinates")
+                        .HasForeignKey("MartiviApiCore.Models.Users.OrderAddressCoordinate", "OrderAddressId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MartiviApiCore.Models.Users.UserAddress", b =>
                 {
                     b.HasOne("MartiviApi.Models.User", null)
                         .WithMany("UserAddresses")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MartiviApiCore.Models.Users.UserAddressCoordinate", b =>
+                {
+                    b.HasOne("MartiviApiCore.Models.Users.UserAddress", null)
+                        .WithOne("Coordinates")
+                        .HasForeignKey("MartiviApiCore.Models.Users.UserAddressCoordinate", "UserAddressId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

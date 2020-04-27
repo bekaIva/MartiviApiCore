@@ -21,6 +21,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.SignalR;
 using MartiviApiCore.Chathub;
 using MartiviApiCore.Models.Users;
+using MartiviApiCore.Models;
+using System.Security.Cryptography;
 
 namespace MartiviApiCore.Controllers
 {
@@ -31,6 +33,7 @@ namespace MartiviApiCore.Controllers
         private IUserService _userService;
         private IMapper _mapper;
         private readonly AppSettings _appSettings;
+        private readonly EmailConfiguration _emailConfiguration;
         IHubContext<ChatHub> _hub;
         MartiviDbContext martiviDbContext;
         public UsersController(MartiviDbContext db,
@@ -43,6 +46,81 @@ namespace MartiviApiCore.Controllers
             _userService = userService;
             _mapper = mapper;
             _appSettings = config.GetSection("AppSettings").Get<AppSettings>();
+            _emailConfiguration = config.GetSection("EmailConfiguration").Get<EmailConfiguration>();
+        }
+
+        [HttpPost("RequestPasswordRecoveryCode")]
+        public IActionResult RequestPasswordRecoveryCode(RequestPasswordRecoveryCodeModel email)
+        {
+            try
+            {
+                EmailSender _emailSender = new EmailSender(_emailConfiguration); 
+                var user = martiviDbContext.Users.FirstOrDefault(u => u.Username.ToLower() == email.Username.ToLower());
+                if (user == null) 
+                {
+                    return Ok(new PasswordChangeResult() { Error = Result.UserNotFound, Message = "მომხმარებელი არ მოიძებნა" });
+                }
+                
+                Random r = new Random();
+                int Code = r.Next(100000, 999999);
+                string hash = CalculateMD5Hash(_appSettings.HashSecret + HashToHex(user.PasswordHash) + Code.ToString() + user.Username);
+                martiviDbContext.PasswordChangeStores.Add(new PasswordChangeStore() { Code = Code, Hash = hash,PasswordTime=DateTime.Now.Ticks });
+                martiviDbContext.SaveChanges();
+                var message = new Message(new string[] { email.Username }, "პაროლის აღდგენა", "გთხოვთ გამოიყენოთ ეს კოდი პაროლის აღდგენისთვის: " + Code.ToString());
+                _emailSender.SendEmail(message);
+                return Ok(new PasswordChangeResult() { Error = Result.CodeSent, Message = "აღდგენის კოდი გაგზავნილია." });
+            }
+            catch (Exception ee)
+            {
+                return BadRequest(ee.Message);
+            }
+        }
+
+        [HttpPost("RecoverPassword")]
+        public IActionResult RecoverPassword(PasswordChangeRequestModel changeRequest)
+        {
+            PasswordChangeResult result = new PasswordChangeResult();
+            try
+            {
+
+                var passwordChange = martiviDbContext.PasswordChangeStores.FirstOrDefault(pcs => pcs.Code == changeRequest.Code);
+
+
+
+                if (passwordChange == null)
+                {
+                    return Ok(new PasswordChangeResult() { Error = Result.InvalidCode, Message = "აღდგენის კოდი არასწორია" });
+                }
+                var currentTick = DateTime.Now.Ticks;
+                var dif = ((currentTick - passwordChange.PasswordTime) / 10000000) / 60;
+                if (dif > 15)
+                {
+                    return Ok(new PasswordChangeResult() { Error = Result.CodeOutOfDated, Message = "აღდგენის კოდი ვადაგასულია" });
+                }
+                var user = martiviDbContext.Users.FirstOrDefault(u => u.Username.ToLower() == changeRequest.Username.ToLower());
+                if (user == null)
+                {
+                    return Ok(new PasswordChangeResult() { Error = Result.UserNotFound, Message = "მომხმარებელი არ მოიძებნა" });
+                }
+            
+
+                string hash = CalculateMD5Hash(_appSettings.HashSecret + HashToHex(user.PasswordHash) + changeRequest.Code + changeRequest.Username);
+                if (!hash.Equals(passwordChange.Hash))
+                {
+                    return Ok(new PasswordChangeResult() { Error = Result.InvalidCode, Message = "აღდგენის კოდი არასწორია" });
+                }
+                _userService.Update(user, changeRequest.NewPassword);
+                martiviDbContext.PasswordChangeStores.Remove(passwordChange);
+                martiviDbContext.SaveChanges();
+                EmailSender _emailSender = new EmailSender(_emailConfiguration);
+                var message = new Message(new string[] { user.Username }, "პაროლის ცვლილება", user.Username + " მომხმარებელს შეეცვალა პაროლი");
+                _emailSender.SendEmail(message);
+                return Ok(new PasswordChangeResult() { Error = Result.PasswordChanged, Message = "პაროლი შეიცვალა." });
+            }
+            catch (Exception ee)
+            {
+                return BadRequest(new PasswordChangeResult() { Error = Result.UnknownError, Message = ee.Message });
+            }
         }
 
         [AllowAnonymous]
@@ -156,7 +234,7 @@ namespace MartiviApiCore.Controllers
             int userid;
             if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest("no user id" + User.Identity.Name);
 
-            var user = martiviDbContext.Users.Include("UserAddresses").FirstOrDefault(user => user.UserId == userid);
+            var user = martiviDbContext.Users.Include(u=>u.UserAddresses).ThenInclude(addreess=>addreess.Coordinates).FirstOrDefault(user => user.UserId == userid);
             return Ok(user.UserAddresses);
         }
 
@@ -219,13 +297,14 @@ namespace MartiviApiCore.Controllers
             int userid;
             if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest("no user id" + User.Identity.Name);
 
-            var user = martiviDbContext.Users.Include("UserAddresses").FirstOrDefault(user => user.UserId == userid);
+            var user = martiviDbContext.Users.Include(usr=>usr.UserAddresses).ThenInclude(uadr=>uadr.Coordinates).FirstOrDefault(user => user.UserId == userid);
 
 
             try
             {
+                
                 var ua = user.UserAddresses.FirstOrDefault(a => a.UserAddressId == address.UserAddressId);
-                user.UserAddresses.Remove(ua);
+                martiviDbContext.UserAddresses.Remove(ua);
                 martiviDbContext.SaveChanges();
                 return Ok();
             }
@@ -249,6 +328,24 @@ namespace MartiviApiCore.Controllers
             {
                 return BadRequest(e.Message);
             }
+        }
+        string HashToHex(byte[] hash)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < hash.Length; i++)
+            {
+                sb.Append(hash[i].ToString("X2").ToLower());
+            }
+            return sb.ToString().ToLower();
+        }
+        public string CalculateMD5Hash(string input)
+        {
+            // step 1, calculate MD5 hash from input
+            MD5 md5 = System.Security.Cryptography.MD5.Create();
+            byte[] inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
+            byte[] hash = md5.ComputeHash(inputBytes);
+
+            return HashToHex(hash);           
         }
     }
 

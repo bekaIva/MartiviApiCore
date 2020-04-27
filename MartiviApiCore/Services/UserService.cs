@@ -17,6 +17,7 @@ namespace MartiviApi.Services
         User GetById(int id);
         User Create(User user, string password);
         void Update(User user, string password = null);
+        void UpdatePassword (User user, string password);
         void Delete(int id);
     }
 
@@ -50,12 +51,12 @@ namespace MartiviApi.Services
 
         public IEnumerable<User> GetAll()
         {
-            return _context.Users.Include("UserAddresses");
+            return _context.Users.Include(usr=>usr.UserAddresses).ThenInclude(usradr=>usradr.Coordinates);
         }
 
         public User GetById(int id)
         {
-            return _context.Users.Include("UserAddresses").FirstOrDefault(user => user.UserId == id);
+            return _context.Users.Include(usr=>usr.UserAddresses).ThenInclude(usradr=>usradr.Coordinates).FirstOrDefault(user => user.UserId == id);
             //return _context.Users.Include("Messages").FirstOrDefault(user => user.UserId == id);
         }
 
@@ -82,7 +83,7 @@ namespace MartiviApi.Services
 
         public void Update(User userParam, string password = null)
         {
-            var user = _context.Users.Include("UserAddresses").FirstOrDefault(u => u.UserId == userParam.UserId);
+            var user = _context.Users.Include(usr=>usr.UserAddresses).ThenInclude(usradr=>usradr.Coordinates).FirstOrDefault(u => u.UserId == userParam.UserId);
 
             var pUser = userParam.UserAddresses.FirstOrDefault(u => u.IsPrimary);
             if (pUser != null)
@@ -135,19 +136,32 @@ namespace MartiviApi.Services
             _context.Users.Update(user);
             _context.SaveChanges();
         }
+        public void UpdatePassword(User user, string password)
+        {
+            if (!string.IsNullOrWhiteSpace(password))
+            {
+                byte[] passwordHash, passwordSalt;
+                CreatePasswordHash(password, out passwordHash, out passwordSalt);
 
+                user.PasswordHash = passwordHash;
+                user.PasswordSalt = passwordSalt;
+            }
+            else throw new Exception("No password provided.");
+            _context.SaveChanges();
+        }
         public void Delete(int id)
         {
 
-            var user = _context.Users.Include("Messages").Include("UserAddresses").FirstOrDefault(u => id == u.UserId);
+            var user = _context.Users.Include(usr=>usr.Messages).Include(usr=>usr.UserAddresses).ThenInclude(usradr=>usradr.Coordinates).FirstOrDefault(u => id == u.UserId);
             if (user != null)
             {
-                var userOrders = _context.Orders.Include("OrderedProducts").Include("User").Include("User.UserAddresses").Where(order => order.User.UserId == user.UserId);
-                var CanceleduserOrders = _context.CanceledOrders.Include("OrderedProducts").Include("User").Include("User.UserAddresses").Where(order => order.User.UserId == user.UserId);
-                var CompleteduserOrders = _context.CompletedOrders.Include("OrderedProducts").Include("User").Include("User.UserAddresses").Where(order => order.User.UserId == user.UserId);
+                var userOrders = _context.Orders.Include(ord=>ord.OrderedProducts).Include(ord=>ord.User).ThenInclude(usr=>usr.UserAddresses).ThenInclude(usradr=>usradr.Coordinates).Where(order => order.User.UserId == user.UserId);
+                //var CanceleduserOrders = _context.CanceledOrders.Include(ord => ord.OrderedProducts).Include(ord => ord.User).ThenInclude(usr => usr.UserAddresses).ThenInclude(usradr => usradr.Coordinates).Where(order => order.User.UserId == user.UserId);
+                //var CompleteduserOrders = _context.CompletedOrders.Include(ord => ord.OrderedProducts).Include(ord => ord.User).ThenInclude(usr => usr.UserAddresses).ThenInclude(usradr => usradr.Coordinates).Where(order => order.User.UserId == user.UserId);
+
                 _context.Orders.RemoveRange(userOrders);
-                _context.CanceledOrders.RemoveRange(CanceleduserOrders);
-                _context.CompletedOrders.RemoveRange(CompleteduserOrders);
+                //_context.CanceledOrders.RemoveRange(CanceleduserOrders);
+                //_context.CompletedOrders.RemoveRange(CompleteduserOrders);
                 _context.Users.Remove(user);
                 _context.SaveChanges();
             }

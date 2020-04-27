@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AspNetCoreRateLimit" Version="3.0.5" />
     <PackageReference Include="AutoMapper" Version="9.0.0" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="dotNetRDF" Version="2.4.0" />
@@ -24,6 +25,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.1" />
+    <PackageReference Include="NETCore.MailKit" Version="2.0.2" />
     <PackageReference Include="Syncfusion.HtmlToPdfConverter.QtWebKit.Net.Core" Version="17.4.0.46" />
     <PackageReference Include="Syncfusion.Pdf.Net.Core" Version="17.4.0.55" />
   </ItemGroup>
@@ -156,6 +158,7 @@
 
   <ItemGroup>
     <Folder Include="Images\" />
+    <Folder Include="Migrations\" />
     <Folder Include="Resources\" />
   </ItemGroup>
 

@@ -48,8 +48,8 @@ namespace MartiviApiCore.Controllers
                 {
                     Directory.CreateDirectory("Images");
                 }
-                string filename = file.Name + Guid.NewGuid().ToString()+".image";
-
+                string filename = Guid.NewGuid().ToString()+file.FileName+".png";
+               
                 // Create new local file and copy contents of uploaded file
                 using (var localFile = System.IO.File.OpenWrite("Images/" + filename))
                 using (var uploadedFile = file.OpenReadStream())
@@ -67,11 +67,19 @@ namespace MartiviApiCore.Controllers
 
 
         }
-        [HttpGet("Images/{link}")]
-        public IActionResult GetBlobDownload(string link)
-        {
-            return File(System.IO.File.Open("Images/" + link, FileMode.Open), "application/force-download");
-        }
-      
+        //[HttpGet("Images/{link}")]
+        //public IActionResult GetBlobDownload(string link)
+        //{
+        //    try
+        //    {
+        //        return File(System.IO.File.Open("Images/" + link, FileMode.Open), "application/force-download");
+        //    }
+        //    catch
+        //    {
+        //        return BadRequest("File not found!");
+        //    }
+
+        //}
+
     }
 }

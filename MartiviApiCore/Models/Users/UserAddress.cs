@@ -5,6 +5,22 @@ using System.Threading.Tasks;
 
 namespace MartiviApiCore.Models.Users
 {
+    public class UserAddressCoordinate
+    {
+        public int UserAddressCoordinateId { get; set; }
+        public int UserAddressId { get; set; }
+        public double Latitude { get; set; }
+
+        public double Longitude { get; set; }
+    }
+    public class OrderAddressCoordinate
+    {
+        public int OrderAddressCoordinateId { get; set; }
+        public int OrderAddressId { get; set; }
+        public double Latitude { get; set; }
+
+        public double Longitude { get; set; }
+    }
     public class UserAddress
     {
         public bool IsPrimary { get; set; }
@@ -12,7 +28,7 @@ namespace MartiviApiCore.Models.Users
         /// Gets or sets the property that holds the customer id.
         /// </summary>
         public int UserAddressId { get; set; }
-
+        public int UserId { get; set; }
         /// <summary>
         /// Gets or sets the property that has been bound with a label, which displays the customer name.
         /// </summary>
@@ -24,7 +40,7 @@ namespace MartiviApiCore.Models.Users
         public string AddressType { get; set; }
 
 
-        public string Coordinates { get; set; }
+        public UserAddressCoordinate Coordinates { get; set; }
         /// <summary>
         /// Gets or sets the property that has been bound with label, which displays the customer address.
         /// </summary>
@@ -42,7 +58,7 @@ namespace MartiviApiCore.Models.Users
         /// Gets or sets the property that holds the customer id.
         /// </summary>
         public int OrderAddressId { get; set; }
-
+        public int OrderId { get; set; }
         /// <summary>
         /// Gets or sets the property that has been bound with a label, which displays the customer name.
         /// </summary>
@@ -53,7 +69,7 @@ namespace MartiviApiCore.Models.Users
         /// </summary>
         public string AddressType { get; set; }
 
-        public string Coordinates { get; set; }
+        public OrderAddressCoordinate Coordinates { get; set; }
         /// <summary>
         /// Gets or sets the property that has been bound with label, which displays the customer address.
         /// </summary>
