@@ -408,10 +408,13 @@ namespace MartiviApi.Controllers
                 if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
                 var exsistingOrder = martiviDbContext.Orders.FirstOrDefault(o => o.OrderId == order.OrderId);
 
-
-                exsistingOrder.IsSeen = true;
-                martiviDbContext.SaveChanges();
-                hubContext.Clients.User(user.UserId.ToString()).SendAsync("UpdateOrderListing");
+                if(!exsistingOrder.IsSeen)
+                {
+                    exsistingOrder.IsSeen = true;
+                    martiviDbContext.SaveChanges();
+                    hubContext.Clients.User(user.UserId.ToString()).SendAsync("UpdateOrderListing");
+                }
+                
                 return Ok();
             }
             catch (Exception ee)
@@ -428,16 +431,17 @@ namespace MartiviApi.Controllers
             string companyName = "მარტივი";
             int orderNo = order.OrderId;
             DataTable dt = new DataTable();
-            dt.Columns.AddRange(new DataColumn[6] {
+            dt.Columns.AddRange(new DataColumn[7] {
                             new DataColumn("ProductId", typeof(string)),
                             new DataColumn("პროდიქტი", typeof(string)),
                             new DataColumn("აღწერა", typeof(string)),
-                            new DataColumn("ფასი", typeof(double)),
+                            new DataColumn("ფასი", typeof(string)),
+                            new DataColumn("წონა", typeof(string)),
                             new DataColumn("რაოდენობა", typeof(int)),
-                            new DataColumn("სრულად", typeof(double))});
+                            new DataColumn("სრულად", typeof(string))});
             foreach (var p in order.OrderedProducts)
             {
-                dt.Rows.Add(p.ProductId, p.Name,p.Description, p.Price, p.Quantity, Math.Round(p.Quantity*p.Price,1));               
+                dt.Rows.Add(p.ProductId, p.Name,p.Description, p.Price.ToString("0.######"),p.Weight, p.Quantity, (p.Quantity*p.Price).ToString("0.######"));               
             }
            
 
@@ -488,7 +492,7 @@ namespace MartiviApi.Controllers
                     sb.Append(dt.Columns.Count - 1);
                     sb.Append("'>სრულად</td>");
                     sb.Append("<td>");
-                    sb.Append(dt.Compute("sum(სრულად)", "")+ "₾");
+                    sb.Append(order.OrderedProducts.Sum(p => p.Quantity * p.Price).ToString("0.######") + "₾");
                     sb.Append("</td>");
                     sb.Append("</tr></table>");
                     sb.Append("<table width='100%'><tr><td align='right'><b>გადახდა: </b>"+order.Payment.ToString()+"</td></tr></table>");
