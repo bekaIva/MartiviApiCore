@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Google.Cloud.Firestore;
 using MartiviApi.Data;
 using MartiviApi.Models;
 using MartiviApiCore.Chathub;
+using MartiviApiCore.FirestoreDataAccess;
 using MartiviApiCore.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -19,6 +20,7 @@ namespace MartiviApiCore.Controllers
     [Route("[controller]")]
     public class CheckoutResultController : Controller
     {
+        FirestoreDataAccessLayer firestoreDataAccessLayer = new FirestoreDataAccessLayer();
         UnipayMerchant merchant = new UnipayMerchant();
         MartiviDbContext martiviDbContext;
         IHubContext<ChatHub> hubContext;
@@ -47,18 +49,22 @@ namespace MartiviApiCore.Controllers
                         {
                             exsistingOrder.Payment = status;
                             martiviDbContext.SaveChanges();
-                            if (User.Identity.Name != exsistingOrder.User.UserId.ToString())
+                            if (exsistingOrder.User != null)
                             {
-                                hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing");
+                                if (User.Identity.Name != exsistingOrder.User.UserId.ToString())
+                                {
+                                    hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing");
+                                }
+                                hubContext.Clients.User(exsistingOrder.User.UserId.ToString()).SendAsync("UpdateOrderListing");
                             }
-                            hubContext.Clients.User(exsistingOrder.User.UserId.ToString()).SendAsync("UpdateOrderListing");
+                            
 
                             try
                             {
-                                var adminUsers = martiviDbContext.Users.Where(new Func<User, bool>((user) => { return user.Type == UserType.Admin; }));
+                                var adminUsers = martiviDbContext.Users.AsQueryable().Where(new Func<User, bool>((user) => { return user.Type == UserType.Admin; }));
                                 foreach (var admin in adminUsers)
                                 {
-                                    if (admin.UserId != exsistingOrder.User.UserId)
+                                    if (admin.UserId != exsistingOrder.User?.UserId)
                                     {
                                         hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrderListing");
                                     }
@@ -81,6 +87,35 @@ namespace MartiviApiCore.Controllers
                 {
                     throw new Exception("შეკვეთა არ მოიძებნა." + MerchantOrderID);
                 }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+        [HttpPost]
+        public async Task<IActionResult> Post(FlutterOrder order)
+        {
+            try
+            {
+                var qres = await firestoreDataAccessLayer.fireStoreDb.Collection("orders").Document(order.documentId).GetSnapshotAsync();
+                if (!qres.Exists)
+                {
+                    return BadRequest("Order doesn't exists");
+
+                }
+                var checkRes = await merchant.CheckStatusFlutter(order);
+                
+                    PaymentStatus status;
+                    if (Enum.TryParse<PaymentStatus>(checkRes.Data.Status, out status))
+                    {
+                        order.Payment = status;
+                        await firestoreDataAccessLayer.fireStoreDb.Collection("orders").Document(order.documentId).SetAsync(new { paymentStatus = order.Payment.ToString() }, SetOptions.MergeAll);
+                    return Ok(status.ToString());
+                    }
+                return BadRequest(checkRes);
+                
+
             }
             catch (Exception e)
             {

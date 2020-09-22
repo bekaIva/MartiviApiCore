@@ -8,10 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.UI;
 using AutoMapper;
+using Google.Cloud.Firestore;
 using MartiviApi.Data;
 using MartiviApi.Models;
 using MartiviApi.Models.Users;
 using MartiviApiCore.Chathub;
+using MartiviApiCore.FirestoreDataAccess;
 using MartiviApiCore.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -30,6 +32,7 @@ namespace MartiviApi.Controllers
 
     public class OrdersController : ControllerBase
     {
+        FirestoreDataAccessLayer firestoreDataAccessLayer = new FirestoreDataAccessLayer();
         UnipayMerchant merchant = new UnipayMerchant();
         private readonly IWebHostEnvironment _webhostingEnvironment;
         MartiviDbContext martiviDbContext;
@@ -56,6 +59,17 @@ namespace MartiviApi.Controllers
                 var exsistingOrder = martiviDbContext.Orders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == order.OrderId);
                 exsistingOrder.User = null;
 
+                if(exsistingOrder.Status!= OrderStatus.Completed)
+                {
+                    foreach (var p in exsistingOrder.OrderedProducts)
+                    {
+                        var res = martiviDbContext.Products.FirstOrDefault(pp => pp.ProductId == p.ProductId);
+                        if (res != null)
+                        {
+                            res.QuantityInSupply += p.Quantity;
+                        }
+                    }
+                }
 
                 foreach (var p in exsistingOrder.OrderedProducts)
                 {
@@ -69,20 +83,20 @@ namespace MartiviApi.Controllers
                 martiviDbContext.Orders.Remove(exsistingOrder);
                 martiviDbContext.SaveChanges();
 
-                var admins = martiviDbContext.Users.Where(user => user.Type == UserType.Admin);
+                var admins = martiviDbContext.Users.AsQueryable().Where(user => user.Type == UserType.Admin);
                 foreach (var admin in admins)
                 {
                     hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrderListing");
                 }
 
                 hubContext.Clients.All.SendAsync("UpdateListing");
-                hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrderListing");
+                if (order.User != null) hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrderListing");
                 hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing");
                 return StatusCode(StatusCodes.Status201Created);
             }
             catch (Exception ee)
             {
-                return StatusCode(StatusCodes.Status201Created,ee.Message);
+                return StatusCode(StatusCodes.Status201Created, ee.Message);
 
             }
 
@@ -103,24 +117,24 @@ namespace MartiviApi.Controllers
             //var canceledorder = mapper.Map<CanceledOrder>(exsistingOrder);
             //martiviDbContext.CanceledOrders.Add(canceledorder);
 
-            foreach (var p in exsistingOrder.OrderedProducts)
-            {
-                var res = martiviDbContext.Products.FirstOrDefault(pp => pp.ProductId == p.ProductId);
-                if (res != null)
-                {
-                    res.QuantityInSupply += p.Quantity;
-                }
-            }
+            //foreach (var p in exsistingOrder.OrderedProducts)
+            //{
+            //    var res = martiviDbContext.Products.FirstOrDefault(pp => pp.ProductId == p.ProductId);
+            //    if (res != null)
+            //    {
+            //        res.QuantityInSupply += p.Quantity;
+            //    }
+            //}
 
             martiviDbContext.SaveChanges();
-            var admins = martiviDbContext.Users.Where(user => user.Type == UserType.Admin);
+            var admins = martiviDbContext.Users.AsQueryable().Where(user => user.Type == UserType.Admin);
             foreach (var admin in admins)
             {
                 hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
             }
 
             hubContext.Clients.All.SendAsync("UpdateListing");
-            hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
+            if(order.User!=null) hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
             hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrder", exsistingOrder);
             return StatusCode(StatusCodes.Status201Created);
 
@@ -131,36 +145,6 @@ namespace MartiviApi.Controllers
 
         }
 
-        [HttpPost]
-        [Route("CompleteOrder/")]
-        public IActionResult PostCompleteOrder(Order order)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            var exsistingOrder = martiviDbContext.Orders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == order.OrderId);
-
-            exsistingOrder.Status = OrderStatus.Completed;
-            //var CompletedOrder = mapper.Map<CompletedOrder>(exsistingOrder);
-            //martiviDbContext.CompletedOrders.Add(CompletedOrder);
-
-            foreach (var p in exsistingOrder.OrderedProducts)
-            {
-                var res = martiviDbContext.Products.FirstOrDefault(pp => pp.ProductId == p.ProductId);
-                if (res != null)
-                {
-                    res.QuantityInSupply += p.Quantity;
-                }
-            }
-
-            martiviDbContext.SaveChanges();
-            hubContext.Clients.All.SendAsync("UpdateListing");
-            hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
-            hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrder", exsistingOrder);
-
-            return StatusCode(StatusCodes.Status201Created);
-        }
 
         [HttpPost]
         [Route("SetOrderStatus/")]
@@ -174,58 +158,10 @@ namespace MartiviApi.Controllers
             if (exsistingOrder.Status == order.Status) return Ok();
             exsistingOrder.Status = order.Status;
 
-            //switch (order.Status)
-            //{
-            //    case OrderStatus.Accepted:
-            //        {
-            //            var canceled = martiviDbContext.CanceledOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-            //            if (canceled != null) martiviDbContext.CanceledOrders.Remove(canceled);
-
-            //            var completed = martiviDbContext.CompletedOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-            //            if (completed != null) martiviDbContext.CompletedOrders.Remove(completed);
-
-            //            martiviDbContext.SaveChanges();
-            //            break;
-            //        }
-            //    case OrderStatus.Canceled:
-            //        {
-            //            var canceled = martiviDbContext.CanceledOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-            //            if (canceled == null) martiviDbContext.CanceledOrders.Add(mapper.Map<CanceledOrder>(exsistingOrder));
-
-            //            var completed = martiviDbContext.CompletedOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-            //            if (completed != null) martiviDbContext.CompletedOrders.Remove(completed);
-
-            //            martiviDbContext.SaveChanges();
-            //            break;
-            //        }
-            //    case OrderStatus.Completed:
-            //        {
-            //            var canceled = martiviDbContext.CanceledOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-            //            if (canceled != null) martiviDbContext.CanceledOrders.Remove(canceled);
-
-            //            var completed = martiviDbContext.CompletedOrders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == exsistingOrder.OrderId);
-            //            if (completed == null) martiviDbContext.CompletedOrders.Add(mapper.Map<CompletedOrder>(exsistingOrder));
-
-            //            martiviDbContext.SaveChanges();
-            //            break;
-            //        }
-            //}
-
-            //var CompletedOrder = mapper.Map<CompletedOrder>(exsistingOrder);
-            //martiviDbContext.CompletedOrders.Add(CompletedOrder);
-
-            //foreach (var p in exsistingOrder.OrderedProducts)
-            //{
-            //    var res = martiviDbContext.Products.FirstOrDefault(pp => pp.ProductId == p.ProductId);
-            //    if (res != null)
-            //    {
-            //        res.QuantityInSupply += p.Quantity;
-            //    }
-            //}
 
             martiviDbContext.SaveChanges();
             hubContext.Clients.All.SendAsync("UpdateOrderListing");
-            hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
+            if(order.User!=null) hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
             hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrder", exsistingOrder);
 
             return StatusCode(StatusCodes.Status201Created);
@@ -234,11 +170,12 @@ namespace MartiviApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(Order order)
         {
-            
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+            if (order.OrderedProducts.Count == 0) return BadRequest("ცარიელი შეკვეთა, შეკვეთა არ შეიცავს არცერთ პროდუქტს");
             foreach (var p in order.OrderedProducts)
             {
                 var res = martiviDbContext.Products.FirstOrDefault(pp => pp.ProductId == p.ProductId);
@@ -251,15 +188,18 @@ namespace MartiviApi.Controllers
                     return BadRequest("არასაკმარისი პროდუქტი");
                 }
             }
-            var user = martiviDbContext.Users.FirstOrDefault(u => u.UserId == order.User.UserId);
-            order.User = user;
+            if (order.User != null)
+            {
+                var user = martiviDbContext.Users.FirstOrDefault(u => u.UserId == order.User.UserId);
+                order.User = user;
+            }
             martiviDbContext.Orders.Add(order);
             martiviDbContext.SaveChanges();
 
-            
 
 
-            var admins = martiviDbContext.Users.Where(user => user.Type == UserType.Admin);
+
+            var admins = martiviDbContext.Users.AsQueryable().Where(user => user.Type == UserType.Admin);
             foreach (var admin in admins)
             {
                 hubContext.Clients.User(admin.UserId.ToString()).SendAsync("NewOrderMade");
@@ -267,12 +207,12 @@ namespace MartiviApi.Controllers
             }
 
             hubContext.Clients.All.SendAsync("UpdateListing");
-            hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrderListing");
+            if(order.User!=null) hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrderListing");
             hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing");
 
-           
 
-            return StatusCode(StatusCodes.Status201Created,order);
+
+            return StatusCode(StatusCodes.Status201Created, order);
 
 
         }
@@ -287,14 +227,14 @@ namespace MartiviApi.Controllers
                 if (exsistingOrder == null) return BadRequest("Order doesn't exists");
                 if (exsistingOrder.Status == OrderStatus.Completed) throw new Exception("შესრულებული შეკვეთა არ საჭირეობს გადახდას.");
                 if (exsistingOrder.Status == OrderStatus.Canceled) throw new Exception("გაუქმებული შეკვეთა არ საჭირეობს გადახდას.");
-                var res = await merchant.Chekout(exsistingOrder);                
+                var res = await merchant.Chekout(exsistingOrder);
                 if (res == null) throw new Exception("Unknown error returned from merchant.");
                 try
                 {
                     if (res.Errorcode == 0)
                     {
-                        var checkRes = await merchant.CheckStatus(exsistingOrder);                        
-                       
+                        var checkRes = await merchant.CheckStatus(exsistingOrder);
+
                         if (res.Errorcode == 0)
                         {
                             PaymentStatus status;
@@ -305,14 +245,14 @@ namespace MartiviApi.Controllers
                                 hubContext.Clients.User(exsistingOrder.User.UserId.ToString()).SendAsync("UpdateOrderListing");
                                 try
                                 {
-                                    var adminUsers = martiviDbContext.Users.Where(new Func<User, bool>((user) => { return user.Type == UserType.Admin; }));
-                                    foreach(var admin in adminUsers)
+                                    var adminUsers = martiviDbContext.Users.AsQueryable().Where(new Func<User, bool>((user) => { return user.Type == UserType.Admin; }));
+                                    foreach (var admin in adminUsers)
                                     {
                                         hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrderListing");
                                     }
                                 }
                                 catch { }
-                                
+
                             }
 
                         }
@@ -333,13 +273,59 @@ namespace MartiviApi.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("CheckoutFlutter/")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckoutFlutter(FlutterOrder order)
+        {
+            try
+            {
+                var qres = await firestoreDataAccessLayer.fireStoreDb.Collection("orders").Document(order.documentId).GetSnapshotAsync();
+                if (!qres.Exists)
+                {
+                    return BadRequest("Order doesn't exists");
+                }
+                var res = await merchant.ChekoutFlutter(order);
+                await firestoreDataAccessLayer.fireStoreDb.Collection("orders").Document(order.documentId).SetAsync(new { Hash = order.Hash, TransactionID = order.TransactionID }, SetOptions.MergeAll);
+                if (res == null) throw new Exception("Unknown error returned from merchant.");
+                try
+                {
+                    if (res.Errorcode == 0)
+                    {
+                        var checkRes = await merchant.CheckStatusFlutter(order);
+
+                        if (res.Errorcode == 0)
+                        {
+                            PaymentStatus status;
+                            if (Enum.TryParse<PaymentStatus>(checkRes.Data.Status, out status))
+                            {
+                                order.Payment = status;
+                                await firestoreDataAccessLayer.fireStoreDb.Collection("orders").Document(order.documentId).SetAsync(new { paymentStatus = order.Payment.ToString() }, SetOptions.MergeAll);
+                            }
+
+                        }
+                    }
+                }
+                catch
+                {
+                }
+                return Ok(res);
+            }
+            catch (Exception ee)
+            {
+                return BadRequest("Checkout failed with an error: " + ee.Message);
+            }
+        }
+
+
+
 
 
         [Route("GetOrders/")]
         [HttpPost]
         public IActionResult GetOrders(User user)
         {
-            var orders = martiviDbContext.Orders.Include(ord => ord.OrderedProducts).Include(ord => ord.OrderAddress).ThenInclude(ordadr=>ordadr.Coordinates).Include(ord => ord.User).ThenInclude(usr => usr.UserAddresses).ThenInclude(uadr => uadr.Coordinates).Where(o => o.User.UserId == user.UserId);
+            var orders = martiviDbContext.Orders.Include(ord => ord.OrderedProducts).Include(ord => ord.OrderAddress).ThenInclude(ordadr => ordadr.Coordinates).Include(ord => ord.User).ThenInclude(usr => usr.UserAddresses).ThenInclude(uadr => uadr.Coordinates).Where(o => o.User.UserId == user.UserId);
             if (orders == null)
             {
                 return NotFound();
@@ -347,6 +333,21 @@ namespace MartiviApi.Controllers
 
             return Ok(orders);
         }
+
+        [Route("GetOrders/")]
+        [HttpGet]
+        public IActionResult GetOrders(string userUId)
+        {
+            var orders = martiviDbContext.Orders.Include(ord => ord.OrderedProducts).Include(ord => ord.OrderAddress).ThenInclude(ordadr => ordadr.Coordinates).Where(o => o.UserUId == userUId);
+            if (orders == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(orders);
+        }
+
+
         [Route("GetAllOrders/")]
         [HttpGet]
         public IActionResult GetAllOrders()
@@ -356,7 +357,7 @@ namespace MartiviApi.Controllers
             var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
             if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
 
-            var orders = martiviDbContext.Orders.Include(ord=>ord.OrderedProducts).Include(ord=>ord.OrderAddress).ThenInclude(orda=>orda.Coordinates).Include(ord=>ord.User).ThenInclude(usr=>usr.UserAddresses).ThenInclude(usradr=>usradr.Coordinates);
+            var orders = martiviDbContext.Orders.Include(ord => ord.OrderedProducts).Include(ord => ord.OrderAddress).ThenInclude(orda => orda.Coordinates).Include(ord => ord.User).ThenInclude(usr => usr.UserAddresses).ThenInclude(usradr => usradr.Coordinates);
             if (orders == null)
             {
                 return NotFound();
@@ -378,11 +379,11 @@ namespace MartiviApi.Controllers
                 var exsistingOrder = martiviDbContext.Orders.Include("OrderedProducts").FirstOrDefault(o => o.OrderId == order.OrderId);
 
 
-              
-              
+
+
                 var pdfRes = GenerateInvoicePDF(exsistingOrder);
 
-               
+
 
 
 
@@ -408,13 +409,13 @@ namespace MartiviApi.Controllers
                 if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
                 var exsistingOrder = martiviDbContext.Orders.FirstOrDefault(o => o.OrderId == order.OrderId);
 
-                if(!exsistingOrder.IsSeen)
+                if (!exsistingOrder.IsSeen)
                 {
                     exsistingOrder.IsSeen = true;
                     martiviDbContext.SaveChanges();
                     hubContext.Clients.User(user.UserId.ToString()).SendAsync("UpdateOrderListing");
                 }
-                
+
                 return Ok();
             }
             catch (Exception ee)
@@ -441,9 +442,12 @@ namespace MartiviApi.Controllers
                             new DataColumn("სრულად", typeof(string))});
             foreach (var p in order.OrderedProducts)
             {
-                dt.Rows.Add(p.ProductId, p.Name,p.Description, p.Price.ToString("0.######"),p.Weight, p.Quantity, (p.Quantity*p.Price).ToString("0.######"));               
+                dt.Rows.Add(p.ProductId, p.Name, p.Description, p.Price.ToString("0.######"), p.Weight, p.Quantity, (p.Quantity * p.Price).ToString("0.######"));
             }
-           
+            if (order.DeliveryFee > 0)
+            {
+                dt.Rows.Add("", "მიწოდება", "მიწოდების საფასური", order.DeliveryFee.ToString("0.######"), "", 1, order.DeliveryFee.ToString("0.######"));
+            }
 
             using (StringWriter sw = new StringWriter())
             {
@@ -459,7 +463,7 @@ namespace MartiviApi.Controllers
                     sb.Append(orderNo);
                     sb.Append("</td><td align = 'right'><b>თარიღი: </b>");
                     DateTime dtt = new DateTime(order.OrderTimeTicks);
-                    sb.Append( dtt.ToString());
+                    sb.Append(dtt.ToString());
                     sb.Append(" </td></tr>");
                     sb.Append("<tr><td colspan = '2'><b>კომპანიის სახელი: </b>");
                     sb.Append(companyName);
@@ -492,21 +496,21 @@ namespace MartiviApi.Controllers
                     sb.Append(dt.Columns.Count - 1);
                     sb.Append("'>სრულად</td>");
                     sb.Append("<td>");
-                    sb.Append(order.OrderedProducts.Sum(p => p.Quantity * p.Price).ToString("0.######") + "₾");
+                    sb.Append((order.OrderedProducts.Sum(p => p.Quantity * p.Price) + order.DeliveryFee).ToString("0.######") + "₾");
                     sb.Append("</td>");
                     sb.Append("</tr></table>");
-                    sb.Append("<table width='100%'><tr><td align='right'><b>გადახდა: </b>"+order.Payment.ToString()+"</td></tr></table>");
-                    
+                    sb.Append("<table width='100%'><tr><td align='right'><b>გადახდა: </b>" + order.Payment.ToString() + "</td></tr></table>");
+
                     HtmlToPdfConverter htmlConverter = new HtmlToPdfConverter();
                     WebKitConverterSettings settings = new WebKitConverterSettings();
                     settings.WebKitPath = Path.Combine(_webhostingEnvironment.ContentRootPath, "QtBinariesWindows");
                     htmlConverter.ConverterSettings = settings;
-                    Syncfusion.Pdf.PdfDocument document = htmlConverter.Convert(sb.ToString(),"");
+                    Syncfusion.Pdf.PdfDocument document = htmlConverter.Convert(sb.ToString(), "");
                     MemoryStream ms = new MemoryStream();
                     document.Save(ms);
                     ms.Position = 0;
                     return ms;
-                    
+
                 }
             }
         }

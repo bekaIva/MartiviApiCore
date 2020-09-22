@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using MartiviApi.Data;
 using MartiviApi.Models;
 using MartiviApiCore.Chathub;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Z.EntityFramework.Plus;
 
 namespace MartiviApi.Controllers
 {
@@ -26,18 +28,33 @@ namespace MartiviApi.Controllers
             martiviDbContext = db;
         }
 
+        
+       
+
         [HttpGet]
         public IActionResult GetCategories()
         {
+
+         
+
             var categories = martiviDbContext.Categories.Include("Products");
             return Ok(categories);
         }
-        
+        [Route("GetFilteredCategories/")]
+        [HttpGet]
+        public IActionResult GetFilteredCategories()
+        {
+            var categories = martiviDbContext.Categories.IncludeFilter(c => c.Products.Where(p=>p.QuantityInSupply>0));
+            return Ok(categories);
+        }
+
 
         [Route("id/{id}")]
         [HttpGet]
         public IActionResult GetCategories(int id)
         {
+          
+
             var categories = martiviDbContext.Categories.Include("Products").FirstOrDefault(c=>c.CategoryId==id);
             if (categories == null)
             {
