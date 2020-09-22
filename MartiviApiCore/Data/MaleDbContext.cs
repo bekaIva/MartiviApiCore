@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using MartiviApi.Models;
-using MartiviApi.Models.Users;
-using MartiviApiCore.Models;
-using MartiviApiCore.Models.Users;
+using MaleApi.Models;
+using MaleApi.Models.Users;
+using MaleApiCore.Models;
+using MaleApiCore.Models.Users;
 using Microsoft.EntityFrameworkCore;
 
-namespace MartiviApi.Data
+namespace MaleApi.Data
 {
-    public class MartiviDbContext : DbContext
+    public class MaleDbContext : DbContext
     {
-        public MartiviDbContext(DbContextOptions<MartiviDbContext> options) : base(options)
+        public MaleDbContext(DbContextOptions<MaleDbContext> options) : base(options)
         {
 
         }
@@ -28,6 +28,6 @@ namespace MartiviApi.Data
         public DbSet<UserAddress> UserAddresses { get; set; }
         public DbSet<OrderAddress> OrderAddresses { get; set; }
         public DbSet<PasswordChangeStore> PasswordChangeStores { get; set; }
-        public DbSet<MartiviApiCore.Models.HomeViewModel> HomeViewModel { get; set; }
+        public DbSet<MaleApiCore.Models.HomeViewModel> HomeViewModel { get; set; }
     }
 }

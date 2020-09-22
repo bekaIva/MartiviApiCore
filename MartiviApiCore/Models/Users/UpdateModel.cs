@@ -1,11 +1,11 @@
 ﻿
-using MartiviApiCore.Models.Users;
+using MaleApiCore.Models.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MartiviApi.Models.Users
+namespace MaleApi.Models.Users
 {
     public class UpdateModel
     {

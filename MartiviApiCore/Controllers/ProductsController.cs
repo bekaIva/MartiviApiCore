@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using MartiviApi.Data;
-using MartiviApi.Models;
-using MartiviApiCore.Chathub;
+using MaleApi.Data;
+using MaleApi.Models;
+using MaleApiCore.Chathub;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
-namespace MartiviApiCore.Controllers
+namespace MaleApiCore.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -20,11 +20,11 @@ namespace MartiviApiCore.Controllers
     public class ProductsController : ControllerBase
     {
         IHubContext<ChatHub> hubContext;
-        MartiviDbContext martiviDbContext;
-        public ProductsController(MartiviDbContext db, IHubContext<ChatHub> hub)
+        MaleDbContext maleDbContext;
+        public ProductsController(MaleDbContext db, IHubContext<ChatHub> hub)
         {
             hubContext = hub;
-            martiviDbContext = db;
+            maleDbContext = db;
         }
         [Route("{AddProductToCategoryId}")]
         [HttpPost]
@@ -32,7 +32,7 @@ namespace MartiviApiCore.Controllers
         {
             int userid;
             if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest();
-            var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
+            var user = maleDbContext.Users.FirstOrDefault(user => user.UserId == userid);
             if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
 
             if (!ModelState.IsValid)
@@ -41,7 +41,7 @@ namespace MartiviApiCore.Controllers
             }
             if (product.ProductId > 0)
             {
-                var existedProduct = martiviDbContext.Products.FirstOrDefault(p => p.ProductId == product.ProductId);
+                var existedProduct = maleDbContext.Products.FirstOrDefault(p => p.ProductId == product.ProductId);
                 if (existedProduct != null)
                 {
                     existedProduct.Description = product.Description;
@@ -51,7 +51,7 @@ namespace MartiviApiCore.Controllers
                     existedProduct.QuantityInSupply = product.QuantityInSupply;
                     existedProduct.Weight = product.Weight;
 
-                    martiviDbContext.SaveChanges();
+                    maleDbContext.SaveChanges();
                     hubContext.Clients.All.SendAsync("UpdateListing");
                     return StatusCode(StatusCodes.Status201Created);
                 }
@@ -61,24 +61,24 @@ namespace MartiviApiCore.Controllers
                 }
             }
 
-            var res = martiviDbContext.Categories.Include("Products").Single(c => c.CategoryId == AddProductToCategoryId);
+            var res = maleDbContext.Categories.Include("Products").Single(c => c.CategoryId == AddProductToCategoryId);
             product.CategoryId = AddProductToCategoryId;
             //product.CategoryId = res.CategoryId;
             res.Products.Add(product);
 
-            martiviDbContext.Database.OpenConnection();
+            maleDbContext.Database.OpenConnection();
             try
             {
 
-                martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Categories] ON");
-                martiviDbContext.SaveChanges();
+                maleDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Categories] ON");
+                maleDbContext.SaveChanges();
                 hubContext.Clients.All.SendAsync("UpdateListing");
                 return StatusCode(StatusCodes.Status201Created);
             }
             finally
             {
-                martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Categories] OFF");
-                martiviDbContext.Database.CloseConnection();
+                maleDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Categories] OFF");
+                maleDbContext.Database.CloseConnection();
             }
 
 
@@ -90,7 +90,7 @@ namespace MartiviApiCore.Controllers
         {
             int userid;
             if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest();
-            var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
+            var user = maleDbContext.Users.FirstOrDefault(user => user.UserId == userid);
             if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
 
             if (!ModelState.IsValid)
@@ -102,12 +102,12 @@ namespace MartiviApiCore.Controllers
             {
                 try
                 {
-                    var currentCat = martiviDbContext.Categories.FirstOrDefault(cat => cat.CategoryId == category.CategoryId);
+                    var currentCat = maleDbContext.Categories.FirstOrDefault(cat => cat.CategoryId == category.CategoryId);
                     if (currentCat != null)
                     {
                         currentCat.Name = category.Name;
                         currentCat.Image = category.Image;
-                        martiviDbContext.SaveChanges();
+                        maleDbContext.SaveChanges();
                         hubContext.Clients.All.SendAsync("UpdateListing");
                         return StatusCode(StatusCodes.Status201Created);
                     }
@@ -118,22 +118,22 @@ namespace MartiviApiCore.Controllers
                 }
             }
             int maxid;
-            if (martiviDbContext.Categories.Count() == 0) maxid = 0;
-            else maxid = martiviDbContext.Categories.Max(c => c.CategoryId);
+            if (maleDbContext.Categories.Count() == 0) maxid = 0;
+            else maxid = maleDbContext.Categories.Max(c => c.CategoryId);
             category.CategoryId = maxid + 1;
-            martiviDbContext.Categories.Add(category);
-            martiviDbContext.Database.OpenConnection();
+            maleDbContext.Categories.Add(category);
+            maleDbContext.Database.OpenConnection();
             try
             {
-                martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Categories] ON");
-                martiviDbContext.SaveChanges();
+                maleDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Categories] ON");
+                maleDbContext.SaveChanges();
                 hubContext.Clients.All.SendAsync("UpdateListing");
                 return StatusCode(StatusCodes.Status201Created);
             }
             finally
             {
-                martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Categories] OFF");
-                martiviDbContext.Database.CloseConnection();
+                maleDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Categories] OFF");
+                maleDbContext.Database.CloseConnection();
             }
 
 
@@ -147,9 +147,9 @@ namespace MartiviApiCore.Controllers
         {
             int userid;
             if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest();
-            var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
+            var user = maleDbContext.Users.FirstOrDefault(user => user.UserId == userid);
             if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
-            var p = martiviDbContext.Products.FirstOrDefault(p => p.ProductId == id);
+            var p = maleDbContext.Products.FirstOrDefault(p => p.ProductId == id);
             if (p != null)
             {
                 try
@@ -164,8 +164,8 @@ namespace MartiviApiCore.Controllers
                 {
 
                 }
-                martiviDbContext.Products.Remove(p);
-                martiviDbContext.SaveChanges();
+                maleDbContext.Products.Remove(p);
+                maleDbContext.SaveChanges();
                 hubContext.Clients.All.SendAsync("UpdateListing");
                 return StatusCode(StatusCodes.Status200OK);
             }

@@ -1,5 +1,5 @@
-﻿using MartiviApi.Data;
-using MartiviApi.Models.Users;
+﻿using MaleApi.Data;
+using MaleApi.Models.Users;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Newtonsoft.Json;
 
-namespace MartiviApiCore.Chathub
+namespace MaleApiCore.Chathub
 {
 
     public class ChatHub : Hub
@@ -59,14 +59,14 @@ namespace MartiviApiCore.Chathub
             
             using (var scope = _sp.CreateScope())
             {
-                var martiviDbContext = scope.ServiceProvider.GetRequiredService<MartiviDbContext>();
+                var maleDbContext = scope.ServiceProvider.GetRequiredService<MaleDbContext>();
 
                 //...
                 
                 int id;
                 int.TryParse(Context.User.Identity.Name, out id);
                 if (id > 0 != true) return;
-                var senderUser = martiviDbContext.Users.Include("Messages").Single(c => c.UserId == id);
+                var senderUser = maleDbContext.Users.Include("Messages").Single(c => c.UserId == id);
                 chatMessage.OwnerProfileImage = senderUser.ProfileImageUrl;
                 var chmSerialized = JsonConvert.SerializeObject(chatMessage);
                 RemoveOldItems(senderUser.Messages);
@@ -75,7 +75,7 @@ namespace MartiviApiCore.Chathub
                 {
                     case MessageTarget.Admin:
                         {
-                            var adminUsers = martiviDbContext.Users.Include("Messages").Where(c => c.Type == MartiviApi.Models.UserType.Admin);
+                            var adminUsers = maleDbContext.Users.Include("Messages").Where(c => c.Type == MaleApi.Models.UserType.Admin);
                             foreach (var adminuser in adminUsers)
                             {
                                 if (adminuser.UserId == id) continue;
@@ -90,7 +90,7 @@ namespace MartiviApiCore.Chathub
                         }
                     case MessageTarget.TargetUser:
                         {
-                            var targetUser = martiviDbContext.Users.Include("Messages").FirstOrDefault(c => c.UserId==chatMessage.TargetUser);
+                            var targetUser = maleDbContext.Users.Include("Messages").FirstOrDefault(c => c.UserId==chatMessage.TargetUser);
                            
                                 if (targetUser.UserId == id) return;
                                 var incomingMessage = JsonConvert.DeserializeObject<ChatMessage>(chmSerialized);
@@ -104,7 +104,7 @@ namespace MartiviApiCore.Chathub
                         }
                     case MessageTarget.Global:
                         {
-                            var targetUsers = martiviDbContext.Users.Include("Messages").Where(c => c.UserId != id);
+                            var targetUsers = maleDbContext.Users.Include("Messages").Where(c => c.UserId != id);
 
                             foreach (var targetuser in targetUsers)
                             {
@@ -120,7 +120,7 @@ namespace MartiviApiCore.Chathub
                         }
                     case MessageTarget.AllUsersExceptAdmin:
                         {
-                            var NonadminUsers = martiviDbContext.Users.Include("Messages").Where(c => c.Type == MartiviApi.Models.UserType.Client);
+                            var NonadminUsers = maleDbContext.Users.Include("Messages").Where(c => c.Type == MaleApi.Models.UserType.Client);
                             foreach (var nonadminuser in NonadminUsers)
                             {
                                 if (nonadminuser.UserId == id) continue;
@@ -139,21 +139,21 @@ namespace MartiviApiCore.Chathub
 
                 //Clients.Caller.SendAsync("ReceiveMessage", user, message);
 
-                //var adminUser = dbcontext.Users.FirstOrDefault(user => user.Type == MartiviApi.Models.UserType.Admin);
+                //var adminUser = dbcontext.Users.FirstOrDefault(user => user.Type == MaleApi.Models.UserType.Admin);
 
                 //Clients.User(adminUser.Username).SendAsync(user, message);
-                martiviDbContext.Database.OpenConnection();
+                maleDbContext.Database.OpenConnection();
                 try
                 {
 
-                    martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] ON");
-                    martiviDbContext.SaveChanges();
+                    maleDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] ON");
+                    maleDbContext.SaveChanges();
 
                 }
                 finally
                 {
-                    martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] OFF");
-                    martiviDbContext.Database.CloseConnection();
+                    maleDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] OFF");
+                    maleDbContext.Database.CloseConnection();
                 }
             }
 
@@ -171,7 +171,7 @@ namespace MartiviApiCore.Chathub
 
             //Clients.Caller.SendAsync("ReceiveMessage", user, message);
 
-            //var adminUser = martiviDbContext.Users.FirstOrDefault(user => user.Type == MartiviApi.Models.UserType.Admin);
+            //var adminUser = maleDbContext.Users.FirstOrDefault(user => user.Type == MaleApi.Models.UserType.Admin);
 
             //Clients.User(adminUser.Username).SendAsync(user, message);
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MartiviApiCore.Models
+namespace MaleApiCore.Models
 {
     public class PasswordChangeStore
     {

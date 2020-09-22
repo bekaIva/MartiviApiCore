@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MartiviApi.Data;
-using MartiviApi.Models;
-using MartiviApiCore.Chathub;
-using MartiviApiCore.Services;
+using Google.Cloud.Firestore;
+using MaleApi.Data;
+using MaleApi.Models;
+using MaleApiCore.Chathub;
+using MaleApiCore.FirestoreDataAccess;
+using MaleApiCore.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -13,19 +14,20 @@ using Newtonsoft.Json;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace MartiviApiCore.Controllers
+namespace MaleApiCore.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     public class CheckoutResultController : Controller
     {
+        FirestoreDataAccessLayer firestoreDataAccessLayer = new FirestoreDataAccessLayer();
         UnipayMerchant merchant = new UnipayMerchant();
-        MartiviDbContext martiviDbContext;
+        MaleDbContext maleDbContext;
         IHubContext<ChatHub> hubContext;
-        public CheckoutResultController(MartiviDbContext db, IHubContext<ChatHub> hub)
+        public CheckoutResultController(MaleDbContext db, IHubContext<ChatHub> hub)
         {
             hubContext = hub;
-            martiviDbContext = db;
+            maleDbContext = db;
         }
         // GET: api/<controller>
         [HttpGet]
@@ -33,7 +35,7 @@ namespace MartiviApiCore.Controllers
         {
             try
             {
-                var exsistingOrder = martiviDbContext.Orders.Include("OrderedProducts").Include("User").FirstOrDefault(o => o.OrderId.ToString() == MerchantOrderID);
+                var exsistingOrder = maleDbContext.Orders.Include("OrderedProducts").Include("User").FirstOrDefault(o => o.OrderId.ToString() == MerchantOrderID);
                 if (exsistingOrder != null)
                 {
                     var oc = merchant.GenerateOrderCreateRequest(exsistingOrder);
@@ -46,19 +48,23 @@ namespace MartiviApiCore.Controllers
                         if (Enum.TryParse<PaymentStatus>(res.Data.Status, out status))
                         {
                             exsistingOrder.Payment = status;
-                            martiviDbContext.SaveChanges();
-                            if (User.Identity.Name != exsistingOrder.User.UserId.ToString())
+                            maleDbContext.SaveChanges();
+                            if (exsistingOrder.User != null)
                             {
-                                hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing");
+                                if (User.Identity.Name != exsistingOrder.User.UserId.ToString())
+                                {
+                                    hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrderListing");
+                                }
+                                hubContext.Clients.User(exsistingOrder.User.UserId.ToString()).SendAsync("UpdateOrderListing");
                             }
-                            hubContext.Clients.User(exsistingOrder.User.UserId.ToString()).SendAsync("UpdateOrderListing");
+                            
 
                             try
                             {
-                                var adminUsers = martiviDbContext.Users.Where(new Func<User, bool>((user) => { return user.Type == UserType.Admin; }));
+                                var adminUsers = maleDbContext.Users.AsQueryable().Where(new Func<User, bool>((user) => { return user.Type == UserType.Admin; }));
                                 foreach (var admin in adminUsers)
                                 {
-                                    if (admin.UserId != exsistingOrder.User.UserId)
+                                    if (admin.UserId != exsistingOrder.User?.UserId)
                                     {
                                         hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrderListing");
                                     }
@@ -81,6 +87,35 @@ namespace MartiviApiCore.Controllers
                 {
                     throw new Exception("შეკვეთა არ მოიძებნა." + MerchantOrderID);
                 }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+        [HttpPost]
+        public async Task<IActionResult> Post(FlutterOrder order)
+        {
+            try
+            {
+                var qres = await firestoreDataAccessLayer.fireStoreDb.Collection("orders").Document(order.documentId).GetSnapshotAsync();
+                if (!qres.Exists)
+                {
+                    return BadRequest("Order doesn't exists");
+
+                }
+                var checkRes = await merchant.CheckStatusFlutter(order);
+                
+                    PaymentStatus status;
+                    if (Enum.TryParse<PaymentStatus>(checkRes.Data.Status, out status))
+                    {
+                        order.Payment = status;
+                        await firestoreDataAccessLayer.fireStoreDb.Collection("orders").Document(order.documentId).SetAsync(new { paymentStatus = order.Payment.ToString() }, SetOptions.MergeAll);
+                    return Ok(status.ToString());
+                    }
+                return BadRequest(checkRes);
+                
+
             }
             catch (Exception e)
             {

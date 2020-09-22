@@ -6,11 +6,11 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
-using MartiviApi.Data;
-using MartiviApi.Models.Users;
-using MartiviApi.Services;
-using MartiviApiCore.Helpers;
-using MartiviApi.Models;
+using MaleApi.Data;
+using MaleApi.Models.Users;
+using MaleApi.Services;
+using MaleApiCore.Helpers;
+using MaleApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,12 +19,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.SignalR;
-using MartiviApiCore.Chathub;
-using MartiviApiCore.Models.Users;
-using MartiviApiCore.Models;
+using MaleApiCore.Chathub;
+using MaleApiCore.Models.Users;
+using MaleApiCore.Models;
 using System.Security.Cryptography;
 
-namespace MartiviApiCore.Controllers
+namespace MaleApiCore.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -35,13 +35,13 @@ namespace MartiviApiCore.Controllers
         private readonly AppSettings _appSettings;
         private readonly EmailConfiguration _emailConfiguration;
         IHubContext<ChatHub> _hub;
-        MartiviDbContext martiviDbContext;
-        public UsersController(MartiviDbContext db,
+        MaleDbContext maleDbContext;
+        public UsersController(MaleDbContext db,
             IUserService userService,
             IMapper mapper,
             IConfiguration config, IHubContext<ChatHub> hub)
         {
-            martiviDbContext = db;
+            maleDbContext = db;
             _hub = hub;
             _userService = userService;
             _mapper = mapper;
@@ -55,7 +55,7 @@ namespace MartiviApiCore.Controllers
             try
             {
                 EmailSender _emailSender = new EmailSender(_emailConfiguration); 
-                var user = martiviDbContext.Users.FirstOrDefault(u => u.Username.ToLower() == email.Username.ToLower());
+                var user = maleDbContext.Users.FirstOrDefault(u => u.Username.ToLower() == email.Username.ToLower());
                 if (user == null) 
                 {
                     return Ok(new PasswordChangeResult() { Error = Result.UserNotFound, Message = "მომხმარებელი არ მოიძებნა" });
@@ -64,8 +64,8 @@ namespace MartiviApiCore.Controllers
                 Random r = new Random();
                 int Code = r.Next(100000, 999999);
                 string hash = CalculateMD5Hash(_appSettings.HashSecret + HashToHex(user.PasswordHash) + Code.ToString() + user.Username);
-                martiviDbContext.PasswordChangeStores.Add(new PasswordChangeStore() { Code = Code, Hash = hash,PasswordTime=DateTime.Now.Ticks });
-                martiviDbContext.SaveChanges();
+                maleDbContext.PasswordChangeStores.Add(new PasswordChangeStore() { Code = Code, Hash = hash,PasswordTime=DateTime.Now.Ticks });
+                maleDbContext.SaveChanges();
                 var message = new Message(new string[] { email.Username }, "პაროლის აღდგენა", "გთხოვთ გამოიყენოთ ეს კოდი პაროლის აღდგენისთვის: " + Code.ToString());
                 _emailSender.SendEmail(message);
                 return Ok(new PasswordChangeResult() { Error = Result.CodeSent, Message = "აღდგენის კოდი გაგზავნილია." });
@@ -83,7 +83,7 @@ namespace MartiviApiCore.Controllers
             try
             {
 
-                var passwordChange = martiviDbContext.PasswordChangeStores.FirstOrDefault(pcs => pcs.Code == changeRequest.Code);
+                var passwordChange = maleDbContext.PasswordChangeStores.FirstOrDefault(pcs => pcs.Code == changeRequest.Code);
 
 
 
@@ -97,7 +97,7 @@ namespace MartiviApiCore.Controllers
                 {
                     return Ok(new PasswordChangeResult() { Error = Result.CodeOutOfDated, Message = "აღდგენის კოდი ვადაგასულია" });
                 }
-                var user = martiviDbContext.Users.FirstOrDefault(u => u.Username.ToLower() == changeRequest.Username.ToLower());
+                var user = maleDbContext.Users.FirstOrDefault(u => u.Username.ToLower() == changeRequest.Username.ToLower());
                 if (user == null)
                 {
                     return Ok(new PasswordChangeResult() { Error = Result.UserNotFound, Message = "მომხმარებელი არ მოიძებნა" });
@@ -110,8 +110,8 @@ namespace MartiviApiCore.Controllers
                     return Ok(new PasswordChangeResult() { Error = Result.InvalidCode, Message = "აღდგენის კოდი არასწორია" });
                 }
                 _userService.Update(user, changeRequest.NewPassword);
-                martiviDbContext.PasswordChangeStores.Remove(passwordChange);
-                martiviDbContext.SaveChanges();
+                maleDbContext.PasswordChangeStores.Remove(passwordChange);
+                maleDbContext.SaveChanges();
                 EmailSender _emailSender = new EmailSender(_emailConfiguration);
                 var message = new Message(new string[] { user.Username }, "პაროლის ცვლილება", user.Username + " მომხმარებელს შეეცვალა პაროლი");
                 _emailSender.SendEmail(message);
@@ -168,7 +168,7 @@ namespace MartiviApiCore.Controllers
             {
                 var u = _userService.Create(user, model.Password);
 
-                var admins = martiviDbContext.Users.Where(user => user.Type == UserType.Admin);
+                var admins = maleDbContext.Users.AsQueryable().Where(user => user.Type == UserType.Admin);
                 foreach (var admin in admins)
                 {
                     _hub.Clients.User(admin.UserId.ToString()).SendAsync("UpdateUsers");
@@ -234,7 +234,7 @@ namespace MartiviApiCore.Controllers
             int userid;
             if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest("no user id" + User.Identity.Name);
 
-            var user = martiviDbContext.Users.Include(u=>u.UserAddresses).ThenInclude(addreess=>addreess.Coordinates).FirstOrDefault(user => user.UserId == userid);
+            var user = maleDbContext.Users.Include(u=>u.UserAddresses).ThenInclude(addreess=>addreess.Coordinates).FirstOrDefault(user => user.UserId == userid);
             return Ok(user.UserAddresses);
         }
 
@@ -272,13 +272,13 @@ namespace MartiviApiCore.Controllers
             int userid;
             if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest("no user id" + User.Identity.Name);
 
-            var user = martiviDbContext.Users.Include("UserAddresses").FirstOrDefault(user => user.UserId == userid);
+            var user = maleDbContext.Users.Include("UserAddresses").FirstOrDefault(user => user.UserId == userid);
             
 
             try
             {
                 user.UserAddresses.Add(address);
-                martiviDbContext.SaveChanges();
+                maleDbContext.SaveChanges();
                 return Ok();
             }
             catch (AppException ex)
@@ -297,15 +297,15 @@ namespace MartiviApiCore.Controllers
             int userid;
             if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest("no user id" + User.Identity.Name);
 
-            var user = martiviDbContext.Users.Include(usr=>usr.UserAddresses).ThenInclude(uadr=>uadr.Coordinates).FirstOrDefault(user => user.UserId == userid);
+            var user = maleDbContext.Users.Include(usr=>usr.UserAddresses).ThenInclude(uadr=>uadr.Coordinates).FirstOrDefault(user => user.UserId == userid);
 
 
             try
             {
                 
                 var ua = user.UserAddresses.FirstOrDefault(a => a.UserAddressId == address.UserAddressId);
-                martiviDbContext.UserAddresses.Remove(ua);
-                martiviDbContext.SaveChanges();
+                maleDbContext.UserAddresses.Remove(ua);
+                maleDbContext.SaveChanges();
                 return Ok();
             }
             catch (AppException ex)
@@ -353,10 +353,10 @@ namespace MartiviApiCore.Controllers
     //[ApiController]
     //public class UsersController : ControllerBase
     //{
-    //    MartiviDbContext martiviDbContext;
-    //    public UsersController(MartiviDbContext db)
+    //    MaleDbContext maleDbContext;
+    //    public UsersController(MaleDbContext db)
     //    {
-    //        martiviDbContext = db;
+    //        maleDbContext = db;
     //    }
 
     //    [HttpPost]
@@ -364,22 +364,22 @@ namespace MartiviApiCore.Controllers
     //    {
 
     //        int maxid;
-    //        if (martiviDbContext.Users.Count() == 0) maxid = 0;
-    //        else maxid = martiviDbContext.Users.Max(u => u.UserId);
+    //        if (maleDbContext.Users.Count() == 0) maxid = 0;
+    //        else maxid = maleDbContext.Users.Max(u => u.UserId);
     //        user.UserId = maxid + 1;
-    //        martiviDbContext.Users.Add(user);
-    //        martiviDbContext.Database.OpenConnection();
+    //        maleDbContext.Users.Add(user);
+    //        maleDbContext.Database.OpenConnection();
     //        try
     //        {
-    //            martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] ON");
-    //            martiviDbContext.SaveChanges();
+    //            maleDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] ON");
+    //            maleDbContext.SaveChanges();
 
     //            return StatusCode(StatusCodes.Status201Created);
     //        }
     //        finally
     //        {
-    //            martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] OFF");
-    //            martiviDbContext.Database.CloseConnection();
+    //            maleDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] OFF");
+    //            maleDbContext.Database.CloseConnection();
     //        }
     //    }
     //}

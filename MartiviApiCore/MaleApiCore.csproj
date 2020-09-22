@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>d1c6bd8b-36d2-42e7-aff1-cd30f027719a</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,24 +11,26 @@
 
   <ItemGroup>
     <PackageReference Include="AspNetCoreRateLimit" Version="3.0.5" />
-    <PackageReference Include="AutoMapper" Version="9.0.0" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
-    <PackageReference Include="dotNetRDF" Version="2.4.0" />
-    <PackageReference Include="EntityFramework" Version="6.4.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.0" />
+    <PackageReference Include="AutoMapper" Version="10.0.0" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="dotNetRDF" Version="2.6.0" />
+    <PackageReference Include="EntityFramework" Version="6.4.4" />
+    <PackageReference Include="Google.Cloud.Firestore" Version="2.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.7" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.0">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.7">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.1" />
-    <PackageReference Include="NETCore.MailKit" Version="2.0.2" />
-    <PackageReference Include="Syncfusion.HtmlToPdfConverter.QtWebKit.Net.Core" Version="17.4.0.46" />
-    <PackageReference Include="Syncfusion.Pdf.Net.Core" Version="17.4.0.55" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.7" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.7" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.4" />
+    <PackageReference Include="NETCore.MailKit" Version="2.0.3" />
+    <PackageReference Include="Syncfusion.HtmlToPdfConverter.QtWebKit.Net.Core" Version="18.2.0.44" />
+    <PackageReference Include="Syncfusion.Pdf.Net.Core" Version="18.2.0.55" />
+    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="3.0.59" />
   </ItemGroup>
 
   <ItemGroup>
@@ -158,7 +161,6 @@
 
   <ItemGroup>
     <Folder Include="Images\" />
-    <Folder Include="Migrations\" />
     <Folder Include="Resources\" />
   </ItemGroup>
 

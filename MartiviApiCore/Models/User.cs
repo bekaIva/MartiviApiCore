@@ -1,13 +1,13 @@
-﻿using MartiviApi.Models;
-using MartiviApi.Models.Users;
-using MartiviApiCore.Models.Users;
+﻿using MaleApi.Models;
+using MaleApi.Models.Users;
+using MaleApiCore.Models.Users;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MartiviApi.Models
+namespace MaleApi.Models
 {
     public enum UserType
     {
