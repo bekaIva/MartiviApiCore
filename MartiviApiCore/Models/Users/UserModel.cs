@@ -1,5 +1,5 @@
 
-namespace MaleApi.Models.Users
+namespace MartiviApi.Models.Users
 {
   public class UserModel
     {

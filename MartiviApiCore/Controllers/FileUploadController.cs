@@ -4,27 +4,27 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using MaleApi.Data;
-using MaleApi.Models;
-using MaleApiCore.Chathub;
+using MartiviApi.Data;
+using MartiviApi.Models;
+using MartiviApiCore.Chathub;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
-namespace MaleApiCore.Controllers
+namespace MartiviApiCore.Controllers
 {
     
     [ApiController]    
     public class UploadController : ControllerBase
     {
         // GET: api/FileUpload
-        MaleDbContext maleDbContext;
+        MartiviDbContext martiviDbContext;
         IMapper mapper;
         IHubContext<ChatHub> hubContext;
-        public UploadController(MaleDbContext db, IMapper mapper, IHubContext<ChatHub> hub)
+        public UploadController(MartiviDbContext db, IMapper mapper, IHubContext<ChatHub> hub)
         {
-            maleDbContext = db;
+            martiviDbContext = db;
             this.mapper = mapper;
             hubContext = hub;
         }
@@ -41,7 +41,7 @@ namespace MaleApiCore.Controllers
             {
                 int userid;
                 if (!int.TryParse(User.Identity.Name, out userid)) return BadRequest("no user id"+ User.Identity.Name);
-                var user = maleDbContext.Users.FirstOrDefault(user => user.UserId == userid);
+                var user = martiviDbContext.Users.FirstOrDefault(user => user.UserId == userid);
                 if (user==null) return BadRequest("არაავტორიზებული მომხმარებელი");
 
                 if (!Directory.Exists("Images"))

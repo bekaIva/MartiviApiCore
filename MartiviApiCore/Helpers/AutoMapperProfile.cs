@@ -1,8 +1,8 @@
 using AutoMapper;
-using MaleApi.Models.Users;
-using MaleApi.Models;
+using MartiviApi.Models.Users;
+using MartiviApi.Models;
 
-namespace MaleApiCore.Helpers
+namespace MartiviApiCore.Helpers
 {
     public class AutoMapperProfile : Profile
     {

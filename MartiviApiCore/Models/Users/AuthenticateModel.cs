@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MaleApi.Models.Users
+namespace MartiviApi.Models.Users
 {
     public class AuthenticateModel
     {

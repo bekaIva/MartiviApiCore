@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MaleApi.Data;
-using MaleApiCore.Helpers;
-using MaleApi.Models;
+using MartiviApi.Data;
+using MartiviApiCore.Helpers;
+using MartiviApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace MaleApi.Services
+namespace MartiviApi.Services
 {
     public interface IUserService
     {
@@ -23,9 +23,9 @@ namespace MaleApi.Services
 
     public class UserService : IUserService
     {
-        private MaleDbContext _context;
+        private MartiviDbContext _context;
 
-        public UserService(MaleDbContext context)
+        public UserService(MartiviDbContext context)
         {
             _context = context;
         }

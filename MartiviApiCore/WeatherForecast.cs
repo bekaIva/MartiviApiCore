@@ -1,6 +1,6 @@
 using System;
 
-namespace MaleApiCore
+namespace MartiviApiCore
 {
     public class WeatherForecast
     {

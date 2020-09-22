@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace MaleApiCore.Migrations
+namespace MartiviApiCore.Migrations
 {
     public partial class _1 : Migration
     {

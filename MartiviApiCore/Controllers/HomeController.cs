@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MaleApiCore.Controllers
+namespace MartiviApiCore.Controllers
 {
     public class HomeController : Controller
     {

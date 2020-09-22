@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
-using MaleApi.Models;
+using MartiviApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MaleApiCore.Models
+namespace MartiviApiCore.Models
 {
     public class OrderProfile:Profile
     {
