@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MartiviApi.Data;
+using MaleApi.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -14,18 +14,18 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using System.Text;
-using MartiviApiCore.Helpers;
+using MaleApiCore.Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using MartiviApi.Services;
+using MaleApi.Services;
 using Microsoft.IdentityModel.Tokens;
-using MartiviApiCore.Chathub;
+using MaleApiCore.Chathub;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
 using Microsoft.AspNetCore.Http;
-using MartiviApiCore.Models;
+using MaleApiCore.Models;
 using AspNetCoreRateLimit;
 
-namespace MartiviApiCore
+namespace MaleApiCore
 {
     public class Startup
     {
@@ -49,9 +49,9 @@ namespace MartiviApiCore
             var emailConfig = Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
             services.AddSingleton(emailConfig);
             var appSettingsSection = Configuration.GetSection("AppSettings");
-            services.AddDbContextPool<MartiviDbContext>(options => 
+            services.AddDbContextPool<MaleDbContext>(options => 
             {
-                options.UseSqlServer(Configuration.GetConnectionString("MartiviApiServerDb")).EnableSensitiveDataLogging(true);
+                options.UseSqlServer(Configuration.GetConnectionString("MaleApiServerDb")).EnableSensitiveDataLogging(true);
                 
             });
             var appSettings = appSettingsSection.Get<AppSettings>();

@@ -2,24 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MartiviApi.Data;
-using MartiviApi.Models.Users;
+using MaleApi.Data;
+using MaleApi.Models.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace MartiviApiCore.Controllers
+namespace MaleApiCore.Controllers
 {
     [Route("api/[controller]")]
     [Authorize]
     [ApiController]
     public class ChatController : ControllerBase
     {
-        MartiviDbContext martiviDbContext;
-        public ChatController(MartiviDbContext db)
+        MaleDbContext maleDbContext;
+        public ChatController(MaleDbContext db)
         {
-            martiviDbContext = db;
+            maleDbContext = db;
         }
         [HttpPost]
         public IActionResult Post(ChatMessage message)
@@ -29,23 +29,23 @@ namespace MartiviApiCore.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var res = martiviDbContext.Users.Include("Messages").Single(c => c.UserId == message.UserId);
+            var res = maleDbContext.Users.Include("Messages").Single(c => c.UserId == message.UserId);
             //product.CategoryId = res.CategoryId;
             res.Messages.Add(message);
 
-            martiviDbContext.Database.OpenConnection();
+            maleDbContext.Database.OpenConnection();
             try
             {
                 
-                martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] ON");
-                martiviDbContext.SaveChanges();
+                maleDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] ON");
+                maleDbContext.SaveChanges();
 
                 return StatusCode(StatusCodes.Status201Created);
             }
             finally
             {
-                martiviDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] OFF");
-                martiviDbContext.Database.CloseConnection();
+                maleDbContext.Database.ExecuteSqlCommand("SET IDENTITY_INSERT [dbo].[Users] OFF");
+                maleDbContext.Database.CloseConnection();
             }
 
 
@@ -57,7 +57,7 @@ namespace MartiviApiCore.Controllers
         {
             int id;
             if (!int.TryParse(User.Identity.Name, out id)) return BadRequest();
-            var user = martiviDbContext.Users.Include("Messages").FirstOrDefault(u => u.UserId == id);
+            var user = maleDbContext.Users.Include("Messages").FirstOrDefault(u => u.UserId == id);
             if (user == null)
             {
                 return NotFound();

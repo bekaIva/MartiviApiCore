@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 using MartiviApi.Data;
 using MartiviApi.Models;
 using MartiviApiCore.Chathub;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Z.EntityFramework.Plus;
-
 namespace MartiviApi.Controllers
 {
     [ApiController]
@@ -49,6 +49,7 @@ namespace MartiviApi.Controllers
         }
 
 
+
         [Route("id/{id}")]
         [HttpGet]
         public IActionResult GetCategories(int id)
@@ -56,6 +57,8 @@ namespace MartiviApi.Controllers
           
 
             var categories = martiviDbContext.Categories.Include("Products").FirstOrDefault(c=>c.CategoryId==id);
+
+
             if (categories == null)
             {
                 return NotFound();

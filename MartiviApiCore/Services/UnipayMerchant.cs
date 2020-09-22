@@ -89,6 +89,7 @@ namespace MartiviApiCore.Services
             om.OrderCurrency = "GEL";
             om.BackLink = Convert.ToBase64String(Encoding.ASCII.GetBytes("http://martivi.net/CheckoutResult?MerchantOrderID=" + order.OrderId.ToString()));
             om.Mlogo = Convert.ToBase64String(Encoding.ASCII.GetBytes("http://martivi.net/images/ic_launcher.png"));
+
             om.Mslogan = " შეუკვეთე მარტივად ";
             om.Language = "GE";
 
@@ -125,6 +126,7 @@ namespace MartiviApiCore.Services
             om.OrderCurrency = "GEL";
             om.BackLink = Convert.ToBase64String(Encoding.ASCII.GetBytes("http://martivi.net/CheckoutResult?MerchantOrderID=" + order.OrderId.ToString()));
             om.Mlogo = Convert.ToBase64String(Encoding.ASCII.GetBytes("http://martivi.net/images/ic_launcher.png"));
+
             om.Mslogan = " შეუკვეთე მარტივად ";
             om.Language = "GE";
 

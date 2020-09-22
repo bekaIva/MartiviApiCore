@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace MartiviApiCore.Migrations
+namespace MaleApiCore.Migrations
 {
     public partial class _1 : Migration
     {
@@ -22,6 +22,18 @@ namespace MartiviApiCore.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HomeViewModel",
+                columns: table => new
+                {
+                    HomeViewModelId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HomeViewModel", x => x.HomeViewModelId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Infos",
                 columns: table => new
                 {
@@ -34,6 +46,21 @@ namespace MartiviApiCore.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Infos", x => x.InfoId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PasswordChangeStores",
+                columns: table => new
+                {
+                    PasswordChangeStoreId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Code = table.Column<int>(nullable: false),
+                    Hash = table.Column<string>(nullable: true),
+                    PasswordTime = table.Column<long>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PasswordChangeStores", x => x.PasswordChangeStoreId);
                 });
 
             migrationBuilder.CreateTable(
@@ -81,7 +108,7 @@ namespace MartiviApiCore.Migrations
                     Name = table.Column<string>(nullable: true),
                     Image = table.Column<string>(nullable: true),
                     Weight = table.Column<string>(nullable: true),
-                    Price = table.Column<double>(nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
                     QuantityInSupply = table.Column<int>(nullable: false),
                     Quantity = table.Column<int>(nullable: false)
                 },
@@ -129,8 +156,10 @@ namespace MartiviApiCore.Migrations
                 {
                     OrderId = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    DeliveryFee = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
                     Status = table.Column<int>(nullable: false),
                     Payment = table.Column<int>(nullable: false),
+                    UserUId = table.Column<string>(nullable: true),
                     UserId = table.Column<int>(nullable: true),
                     OrderTimeTicks = table.Column<long>(nullable: false),
                     Hash = table.Column<string>(nullable: true),
@@ -208,7 +237,7 @@ namespace MartiviApiCore.Migrations
                     Name = table.Column<string>(nullable: true),
                     Image = table.Column<string>(nullable: true),
                     Weight = table.Column<string>(nullable: true),
-                    Price = table.Column<double>(nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
                     Quantity = table.Column<int>(nullable: false),
                     OrderId = table.Column<int>(nullable: true)
                 },
@@ -315,6 +344,9 @@ namespace MartiviApiCore.Migrations
                 name: "ChatMessage");
 
             migrationBuilder.DropTable(
+                name: "HomeViewModel");
+
+            migrationBuilder.DropTable(
                 name: "Infos");
 
             migrationBuilder.DropTable(
@@ -322,6 +354,9 @@ namespace MartiviApiCore.Migrations
 
             migrationBuilder.DropTable(
                 name: "OrderedProducts");
+
+            migrationBuilder.DropTable(
+                name: "PasswordChangeStores");
 
             migrationBuilder.DropTable(
                 name: "Products");

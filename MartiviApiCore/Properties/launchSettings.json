@@ -17,7 +17,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "MartiviApiCore": {
+    "MaleApiCore": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "",

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
-namespace MartiviApi.Models
+namespace MaleApi.Models
 {
     public class Product
     {

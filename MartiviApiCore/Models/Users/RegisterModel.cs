@@ -1,7 +1,7 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace MartiviApi.Models.Users
+namespace MaleApi.Models.Users
 {
     public class RegisterModel
     {

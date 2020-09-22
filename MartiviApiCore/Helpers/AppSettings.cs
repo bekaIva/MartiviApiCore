@@ -1,4 +1,4 @@
-namespace MartiviApiCore.Helpers
+namespace MaleApiCore.Helpers
 {
     public class AppSettings
     {

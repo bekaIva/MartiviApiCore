@@ -64,6 +64,7 @@ namespace MartiviApi.Controllers
                     foreach (var p in exsistingOrder.OrderedProducts)
                     {
                         var res = martiviDbContext.Products.FirstOrDefault(pp => pp.ProductId == p.ProductId);
+
                         if (res != null)
                         {
                             res.QuantityInSupply += p.Quantity;
@@ -84,6 +85,7 @@ namespace MartiviApi.Controllers
                 martiviDbContext.SaveChanges();
 
                 var admins = martiviDbContext.Users.AsQueryable().Where(user => user.Type == UserType.Admin);
+
                 foreach (var admin in admins)
                 {
                     hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrderListing");
@@ -120,6 +122,7 @@ namespace MartiviApi.Controllers
             //foreach (var p in exsistingOrder.OrderedProducts)
             //{
             //    var res = martiviDbContext.Products.FirstOrDefault(pp => pp.ProductId == p.ProductId);
+
             //    if (res != null)
             //    {
             //        res.QuantityInSupply += p.Quantity;
@@ -128,6 +131,7 @@ namespace MartiviApi.Controllers
 
             martiviDbContext.SaveChanges();
             var admins = martiviDbContext.Users.AsQueryable().Where(user => user.Type == UserType.Admin);
+
             foreach (var admin in admins)
             {
                 hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
@@ -160,6 +164,7 @@ namespace MartiviApi.Controllers
 
 
             martiviDbContext.SaveChanges();
+
             hubContext.Clients.All.SendAsync("UpdateOrderListing");
             if(order.User!=null) hubContext.Clients.User(order.User.UserId.ToString()).SendAsync("UpdateOrder", exsistingOrder);
             hubContext.Clients.User(User.Identity.Name).SendAsync("UpdateOrder", exsistingOrder);
@@ -200,6 +205,7 @@ namespace MartiviApi.Controllers
 
 
             var admins = martiviDbContext.Users.AsQueryable().Where(user => user.Type == UserType.Admin);
+
             foreach (var admin in admins)
             {
                 hubContext.Clients.User(admin.UserId.ToString()).SendAsync("NewOrderMade");
@@ -244,8 +250,10 @@ namespace MartiviApi.Controllers
                                 martiviDbContext.SaveChanges();
                                 hubContext.Clients.User(exsistingOrder.User.UserId.ToString()).SendAsync("UpdateOrderListing");
                                 try
-                                {
+             {
                                     var adminUsers = martiviDbContext.Users.AsQueryable().Where(new Func<User, bool>((user) => { return user.Type == UserType.Admin; }));
+
+
                                     foreach (var admin in adminUsers)
                                     {
                                         hubContext.Clients.User(admin.UserId.ToString()).SendAsync("UpdateOrderListing");
@@ -317,6 +325,10 @@ namespace MartiviApi.Controllers
             }
         }
 
+ 
+
+
+
 
 
 
@@ -339,6 +351,7 @@ namespace MartiviApi.Controllers
         public IActionResult GetOrders(string userUId)
         {
             var orders = martiviDbContext.Orders.Include(ord => ord.OrderedProducts).Include(ord => ord.OrderAddress).ThenInclude(ordadr => ordadr.Coordinates).Where(o => o.UserUId == userUId);
+
             if (orders == null)
             {
                 return NotFound();
@@ -346,6 +359,8 @@ namespace MartiviApi.Controllers
 
             return Ok(orders);
         }
+
+
 
 
         [Route("GetAllOrders/")]
@@ -358,6 +373,7 @@ namespace MartiviApi.Controllers
             if (user.Type != UserType.Admin) return BadRequest("არა ადმინისტრატორი მომხმარებელი");
 
             var orders = martiviDbContext.Orders.Include(ord => ord.OrderedProducts).Include(ord => ord.OrderAddress).ThenInclude(orda => orda.Coordinates).Include(ord => ord.User).ThenInclude(usr => usr.UserAddresses).ThenInclude(usradr => usradr.Coordinates);
+
             if (orders == null)
             {
                 return NotFound();

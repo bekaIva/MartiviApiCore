@@ -161,7 +161,6 @@
 
   <ItemGroup>
     <Folder Include="Images\" />
-    <Folder Include="Migrations\" />
     <Folder Include="Resources\" />
   </ItemGroup>
 

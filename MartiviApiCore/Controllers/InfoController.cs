@@ -2,24 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MartiviApi.Data;
-using MartiviApiCore.Models;
+using MaleApi.Data;
+using MaleApiCore.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using Microsoft.AspNetCore.SignalR;
-using MartiviApiCore.Chathub;
+using MaleApiCore.Chathub;
 using Microsoft.AspNetCore.Authorization;
 
-namespace MartiviApiCore.Controllers
+namespace MaleApiCore.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class InfoController : ControllerBase
     {
-        MartiviDbContext context;
+        MaleDbContext context;
         IHubContext<ChatHub> hubContext;
-        public InfoController(MartiviDbContext dbContext, IHubContext<ChatHub> hub)
+        public InfoController(MaleDbContext dbContext, IHubContext<ChatHub> hub)
         {
             hubContext = hub;
             context = dbContext;

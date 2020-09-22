@@ -1,5 +1,5 @@
-﻿using MartiviApi.Models;
-using MartiviApiCore.Models.Users;
+﻿using MaleApi.Models;
+using MaleApiCore.Models.Users;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
-namespace MartiviApi.Models
+namespace MaleApi.Models
 {
     public enum OrderStatus
     {

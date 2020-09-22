@@ -168,7 +168,9 @@ namespace MartiviApiCore.Controllers
             {
                 var u = _userService.Create(user, model.Password);
 
+
                 var admins = martiviDbContext.Users.AsQueryable().Where(user => user.Type == UserType.Admin);
+
                 foreach (var admin in admins)
                 {
                     _hub.Clients.User(admin.UserId.ToString()).SendAsync("UpdateUsers");

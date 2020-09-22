@@ -62,6 +62,8 @@ namespace MartiviApiCore.Controllers
                             try
                             {
                                 var adminUsers = martiviDbContext.Users.AsQueryable().Where(new Func<User, bool>((user) => { return user.Type == UserType.Admin; }));
+
+  
                                 foreach (var admin in adminUsers)
                                 {
                                     if (admin.UserId != exsistingOrder.User?.UserId)
